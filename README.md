@@ -65,7 +65,7 @@
 
 1. Download source code from [Releases](../../releases)
 2. Unzip it
-3. Open Chrome &#x21BB; `chrome://extensions`
+3. Open Chrome &rarr; `chrome://extensions`
 4. Enable **Developer mode** (top-right toggle)
 5. Click **Load unpacked** &rarr; select the unzipped folder
 6. Open a new tab
