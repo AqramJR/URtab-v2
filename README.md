@@ -20,7 +20,7 @@
 
 ## Features
 
-### ?? Prayer Times
+### &#x1F54C; Prayer Times
 - Real-time Salah times based on GPS location, powered by [Aladhan API](https://aladhan.com/prayer-times-api)
 - Hijri date shown in every style
 - Advances automatically as each prayer passes ！ no manual refresh
@@ -28,30 +28,30 @@
 - **6 calculation methods:** Egyptian ， Umm Al-Qura ， ISNA ， MWL ， Karachi ， Diyanet
 - Auto-refreshes at midnight
 
-### ? Weather
+### &#x26C5; Weather
 - Current conditions + **5-day forecast** via [Open-Meteo](https://open-meteo.com/) ！ free, no API key
 - **4 styles:** Pill ， Card ， Minimal ， Forecast (with high/low temps and rain probability)
 - Celsius or Fahrenheit
 - Location cached cross-session ！ weather loads instantly on every new tab
 
-### ?? Backgrounds
+### &#x1F3A8; Backgrounds
 - **12 gradient presets** ！ 8 static, 4 animated (slow-shifting color loops)
 - Upload your own **image** or **video** loop
   - Video stored via IndexedDB ！ 16 MB files load in under a second
   - Adjustable overlay darkness and playback speed
   - Mute/unmute
 
-### ?? Clock
+### &#x1F552; Clock
 - **6 themes:** Minimal ， Editorial ， Neon ， Mono ， Display ， Luxury
 - 12h / 24h format, 4 sizes
 - Optional greeting: *Good Morning / Afternoon / Evening, Name*
 - Display theme supports the Anurati typeface (optional font file)
 
-### ?? Search & Links
+### &#x1F50D; Search & Links
 - 4 search styles, 4 engines (Google ， Bing ， DuckDuckGo ， Brave)
 - 6 link styles, 3 icon sizes, fully editable shortcuts
 
-### ?? Layout & More
+### &#x2699; Layout & More
 - Every widget has a **3〜3 position grid** ！ drag-free placement
 - Auto-fade on inactivity (configurable delay)
 - Animated favicon ！ live clock in the browser tab
@@ -65,12 +65,12 @@
 
 1. Download source code from [Releases](../../releases)
 2. Unzip it
-3. Open Chrome ★ `chrome://extensions`
+3. Open Chrome &#x21BB; `chrome://extensions`
 4. Enable **Developer mode** (top-right toggle)
-5. Click **Load unpacked** ★ select the unzipped folder
+5. Click **Load unpacked** &rarr; select the unzipped folder
 6. Open a new tab
 
-To update: replace the folder contents and click ? on the extension card.
+To update: replace the folder contents and click &#x21BB; on the extension card.
 
 ---
 
