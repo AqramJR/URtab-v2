@@ -2,15 +2,9 @@
 
 # UrTab
 
-**A beautiful, New tab ¡ª prayer times, live weather, animated backgrounds, clock themes. Zero dependencies, no account required.**
+**A beautiful, Muslim-friendly Chrome new tab â€” prayer times, live weather, animated backgrounds, and six clock themes. Zero dependencies, no account required.**
 
-<br>
-
-<img src="screenshots/hero.gif" alt="UrTab - A beautiful, animated New Tab page in action" width="1280">
-
-<br>
-
-![Version](https://img.shields.io/badge/version-2.0-7c6af7?style=flat-square) 
+![Version](https://img.shields.io/badge/version-2.0-7c6af7?style=flat-square)
 ![Manifest](https://img.shields.io/badge/manifest-v3-5edf82?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-d4a843?style=flat-square)
 
@@ -20,41 +14,41 @@
 
 ## Features
 
-### &#x1F54C; Prayer Times
+### ðŸ•Œ Prayer Times
 - Real-time Salah times based on GPS location, powered by [Aladhan API](https://aladhan.com/prayer-times-api)
 - Hijri date shown in every style
-- Advances automatically as each prayer passes ¡ª no manual refresh
-- **4 widget styles:** Minimal ¡¤ Bar ¡¤ Card ¡¤ Mosque
-- **6 calculation methods:** Egyptian ¡¤ Umm Al-Qura ¡¤ ISNA ¡¤ MWL ¡¤ Karachi ¡¤ Diyanet
+- Advances automatically as each prayer passes â€” no manual refresh
+- **4 widget styles:** Minimal Â· Bar Â· Card Â· Mosque
+- **6 calculation methods:** Egyptian Â· Umm Al-Qura Â· ISNA Â· MWL Â· Karachi Â· Diyanet
 - Auto-refreshes at midnight
 
-### &#x26C5; Weather
-- Current conditions + **5-day forecast** via [Open-Meteo](https://open-meteo.com/) ¡ª free, no API key
-- **4 styles:** Pill ¡¤ Card ¡¤ Minimal ¡¤ Forecast (with high/low temps and rain probability)
+### â›… Weather
+- Current conditions + **5-day forecast** via [Open-Meteo](https://open-meteo.com/) â€” free, no API key
+- **4 styles:** Pill Â· Card Â· Minimal Â· Forecast (with high/low temps and rain probability)
 - Celsius or Fahrenheit
-- Location cached cross-session ¡ª weather loads instantly on every new tab
+- Location cached cross-session â€” weather loads instantly on every new tab
 
-### &#x1F3A8; Backgrounds
-- **12 gradient presets** ¡ª 8 static, 4 animated (slow-shifting color loops)
+### ðŸŽ¨ Backgrounds
+- **12 gradient presets** â€” 8 static, 4 animated (slow-shifting color loops)
 - Upload your own **image** or **video** loop
-  - Video stored via IndexedDB ¡ª 16 MB files load in under a second
+  - Video stored via IndexedDB â€” 16 MB files load in under a second
   - Adjustable overlay darkness and playback speed
-  - Mute/unmute
+  - Mute/unmute button
 
-### &#x1F552; Clock
-- **6 themes:** Minimal ¡¤ Editorial ¡¤ Neon ¡¤ Mono ¡¤ Display ¡¤ Luxury
+### ðŸ• Clock
+- **6 themes:** Minimal Â· Editorial Â· Neon Â· Mono Â· Display Â· Luxury
 - 12h / 24h format, 4 sizes
 - Optional greeting: *Good Morning / Afternoon / Evening, Name*
 - Display theme supports the Anurati typeface (optional font file)
 
-### &#x1F50D; Search & Links
-- 4 search styles, 4 engines (Google ¡¤ Bing ¡¤ DuckDuckGo ¡¤ Brave)
+### ðŸ” Search & Links
+- 4 search styles, 4 engines (Google Â· Bing Â· DuckDuckGo Â· Brave)
 - 6 link styles, 3 icon sizes, fully editable shortcuts
 
-### &#x2699; Layout & More
-- Every widget has a **3¡Á3 position grid** ¡ª drag-free placement
+### âš™ï¸ Layout & More
+- Every widget has a **3Ã—3 position grid** â€” drag-free placement
 - Auto-fade on inactivity (configurable delay)
-- Animated favicon ¡ª live clock in the browser tab
+- Animated favicon â€” live clock in the browser tab
 - Settings toggle (open/close), keyboard shortcut: `Esc`
 
 ---
@@ -63,27 +57,20 @@
 
 > **No build step. No npm. Just unzip and load.**
 
-1. Download source code from [Releases](../../releases)
+1. Download `newtab-extension.zip` from [Releases](../../releases)
 2. Unzip it
-3. Open Chrome &rarr; `chrome://extensions`
+3. Open Chrome â†’ `chrome://extensions`
 4. Enable **Developer mode** (top-right toggle)
-5. Click **Load unpacked** &rarr; select the unzipped folder
+5. Click **Load unpacked** â†’ select the unzipped folder
 6. Open a new tab
 
-To update: replace the folder contents and click &#x21BB; on the extension card.
+To update: replace the folder contents and click â†º on the extension card.
 
 ---
 
 ## Screenshots
 
-| New Tab | Settings & Customization |
-|:---:|:---:|
-| ![Main Dashboard](screenshots/main.png) | ![Settings Panel](screenshots/settings.png) |
-| *Clean, minimal interface* | *Deep customization options* |
-
-| Weather Forecast | Background Presets |
-|:---:|:---:|
-| ![Weather Widget](screenshots/weather.gif) | ![Background Settings](screenshots/background.png) |
+> *(Add your screenshots here)*
 
 ---
 
@@ -100,7 +87,7 @@ No tracking. No analytics. No ads. No external scripts.
 
 ## APIs Used
 
-All completely free ¡ª no account or API key needed.
+All completely free â€” no account or API key needed.
 
 | API | Purpose |
 |---|---|
@@ -109,8 +96,36 @@ All completely free ¡ª no account or API key needed.
 | [Aladhan](https://aladhan.com/prayer-times-api) | Prayer times + Hijri date |
 
 ---
+
+## Fonts (optional)
+
+The **Display** clock theme uses [Anurati](https://www.behance.net/gallery/31547519/Anurati-Free-typeface). It falls back to Orbitron if not present.
+
+To install: place `Anurati.woff2` + `Anurati.woff` in the `fonts/` folder, then reload the extension.
+
+---
+
+## Architecture
+
+```
+newtab-extension/
+â”œâ”€â”€ manifest.json     Chrome MV3 manifest
+â”œâ”€â”€ newtab.html       UI + all CSS (single file)
+â”œâ”€â”€ settings.js       Constants, defaults, storage helpers
+â”œâ”€â”€ newtab.js         All application logic
+â”œâ”€â”€ fonts/            Drop Anurati font files here
+â””â”€â”€ icons/            16 Â· 32 Â· 48 Â· 128 px
+```
+
+Pure HTML + CSS + vanilla JS. No bundler, no framework, no node_modules.
+
+**Video storage:** Uploaded videos are stored as raw `File` objects in IndexedDB (not base64 in `localStorage`). Playback uses `URL.createObjectURL()` â€” a 16 MB video loads in under a second.
+
+---
+
 ## Changelog
-### v2.0 ¡ª Complete rewrite
+
+### v2.0 â€” Complete rewrite
 - Muslim prayer times widget with 4 styles and Hijri date
 - 5-day weather forecast (same free API)
 - 4 animated gradient backgrounds
@@ -119,11 +134,11 @@ All completely free ¡ª no account or API key needed.
 - Animated favicon (live clock in browser tab)
 - Settings panel with 6 tabs, toggle open/close
 - Geolocation persisted cross-session
-- Page Visibility API ¡ª pauses when tab is hidden
+- Page Visibility API â€” pauses when tab is hidden
 - Zero dependencies
 
 ---
 
 ## License
 
-MIT ¡ª do whatever you want, attribution appreciated.
+MIT â€” do whatever you want, attribution appreciated.

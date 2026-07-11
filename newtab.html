@@ -21,7 +21,7 @@
   --w:rgba(255,255,255,.90);--dim:rgba(255,255,255,.48);
   --glass:rgba(255,255,255,.10);--bdr:rgba(255,255,255,.14);
   --blur:blur(20px);--tr:.5s cubic-bezier(.4,0,.2,1);
-  --pw:376px;--acc:#7c6af7;--acc2:rgba(124,106,247,.18);
+  --pw:420px;--acc:#7c6af7;--acc2:rgba(124,106,247,.18);
   --pb:rgba(8,8,20,.94);--pb2:rgba(255,255,255,.055);--pbr:rgba(255,255,255,.08);
   --gold:#d4a843;--gold2:rgba(212,168,67,.18);
 }
@@ -246,6 +246,56 @@ body.weather-forecast #weather-temp{font-size:22px;font-weight:200}
 
 .gal-live{color:var(--gold);margin-left:2px;font-size:8px;vertical-align:super}
 .p-label-note{float:right;font-size:9px;color:rgba(255,255,255,.3);font-weight:400;letter-spacing:1px;text-transform:none;margin-top:2px}
+
+#quote-wrap{max-width:480px;width:min(90vw,480px);transition:opacity .4s,transform .4s}
+.quote-inner{position:relative}
+.quote-type-tag{display:inline-block;font-size:9px;letter-spacing:1.5px;padding:2px 7px;border-radius:20px;background:rgba(124,106,247,.18);color:var(--acc);border:1px solid rgba(124,106,247,.3);margin-bottom:10px;font-family:inherit}
+.quote-arabic{font-size:22px;text-align:right;direction:rtl;color:var(--gold);line-height:1.9;margin-bottom:10px;font-weight:400}
+.quote-text{font-size:12px;font-weight:200;line-height:1.75;color:rgba(255,255,255,.75);font-style:italic;margin-bottom:12px}
+.quote-footer{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.quote-ref{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.4px;flex:1}
+.quote-actions{display:flex;gap:5px;flex-shrink:0}
+.quote-play-btn,.quote-next-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--w);cursor:pointer;transition:background .2s,transform .15s;padding:0;line-height:1}
+.quote-play-btn:hover,.quote-next-btn:hover{background:rgba(124,106,247,.35);transform:scale(1.1)}
+.quote-loading{font-size:22px;text-align:center;color:var(--gold);opacity:.6;padding:20px;animation:quotePulse 1.8s ease infinite}
+.quote-error{font-size:11px;color:rgba(255,120,80,.7);padding:16px 20px;cursor:pointer;text-align:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,80,50,.2);border-radius:14px}
+@keyframes quotePulse{0%,100%{opacity:.3}50%{opacity:.9}}
+
+.quote-card{background:rgba(10,10,22,.55);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:18px 20px;backdrop-filter:blur(6px)}
+.quote-card .quote-arabic{font-size:24px}
+
+.quote-minimal{padding:6px 0}
+.quote-minimal .quote-arabic{font-size:26px;text-align:center;margin-bottom:8px}
+.quote-minimal .quote-footer{justify-content:center}
+.quote-minimal .quote-ref{text-align:center;flex:none}
+
+.quote-glass{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:18px 20px;backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);box-shadow:0 8px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+.quote-glass .quote-arabic{font-size:22px}
+
+.quote-verse{padding:14px 16px;border-left:3px solid var(--acc);background:rgba(124,106,247,.06);border-radius:0 14px 14px 0}
+.quote-verse .quote-arabic{font-size:22px}
+.quote-verse .quote-ref{color:rgba(124,106,247,.7)}
+
+.swatch-wide{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px;cursor:pointer;transition:border-color .2s,background .2s;display:flex;flex-direction:column;gap:6px}
+.swatch-wide:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15)}
+.swatch-wide.active{border-color:var(--acc);background:var(--acc2)}
+.swatch-wide .sw-preview{pointer-events:none}
+.swatch-wide .sw-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);text-align:center}
+
+#calendar-wrap{transition:opacity .4s,transform .4s}
+.cal-outer{display:inline-block;overflow:hidden}
+.cal-frame{width:360px;height:370px;border:none;display:block}
+@media(max-width:600px){.cal-frame{width:92vw;height:280px}}
+
+.cal-card{background:rgba(10,10,22,.55);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:4px;backdrop-filter:blur(6px)}
+.cal-card .cal-frame{border-radius:14px}
+
+.cal-minimal{border-top:1px solid rgba(255,255,255,.12);padding-top:4px}
+
+.cal-glass{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:4px;backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);box-shadow:0 8px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+.cal-glass .cal-frame{border-radius:14px}
+
+.cal-verse{border-left:3px solid var(--acc);padding-left:10px;background:rgba(124,106,247,.05);border-radius:0 14px 14px 0}
 #sound-btn{position:fixed;bottom:68px;right:24px;z-index:30;background:var(--glass);border:1px solid var(--bdr);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);color:var(--dim);width:36px;height:36px;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;transition:var(--tr)}
 #sound-btn.visible{display:flex}
 #sound-btn:hover{background:rgba(255,255,255,.18);color:var(--w)}
@@ -269,9 +319,8 @@ body.panel-open #settings-panel{transform:translateX(0)}
 #panel-saved.show{opacity:1}
 #panel-close{background:none;border:none;cursor:pointer;color:var(--dim);padding:6px;border-radius:8px;display:flex;align-items:center;transition:var(--tr)}
 #panel-close:hover{background:rgba(255,255,255,.08);color:var(--w)}
-#panel-nav{display:flex;padding:10px 12px 0;gap:2px;border-bottom:1px solid var(--pbr);flex-shrink:0;overflow-x:auto}
-#panel-nav::-webkit-scrollbar{display:none}
-.p-tab{background:none;border:none;cursor:pointer;color:var(--dim);font-family:inherit;font-size:11px;padding:7px 11px 9px;border-radius:8px 8px 0 0;display:flex;align-items:center;gap:5px;transition:var(--tr);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;flex-shrink:0}
+#panel-nav{display:flex;flex-wrap:wrap;padding:8px 10px 0;gap:2px;border-bottom:1px solid var(--pbr);flex-shrink:0}
+.p-tab{background:none;border:none;cursor:pointer;color:var(--dim);font-family:inherit;font-size:10px;padding:6px 9px 8px;border-radius:7px 7px 0 0;display:flex;align-items:center;gap:4px;transition:var(--tr);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;flex-shrink:0}
 .p-tab:hover{color:var(--w)}
 .p-tab.active{color:var(--w);border-bottom-color:var(--acc)}
 #panel-body{flex:1;overflow-y:auto;padding:14px 20px 40px}
@@ -433,10 +482,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
         </form>
       </div>
     </div>
-    <div class="zone" id="zone-center-right"  data-row="center" data-col="right"></div>
+    <div class="zone" id="zone-center-right"  data-row="center" data-col="right">
+      <div id="calendar-wrap" style="display:none"></div>
+    </div>
     <div class="zone" id="zone-bottom-left"   data-row="bottom" data-col="left"></div>
     <div class="zone" id="zone-bottom-center" data-row="bottom" data-col="center">
       <div id="links-wrap"></div>
+      <div id="quote-wrap" style="display:none"></div>
     </div>
     <div class="zone" id="zone-bottom-right"  data-row="bottom" data-col="right">
       <div id="prayer-wrap" style="display:none"></div>
@@ -482,6 +534,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     </button>
     <button class="p-tab" data-tab="more">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>More
+    </button>
+    <button class="p-tab" data-tab="quote">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>Quote
+    </button>
+    <button class="p-tab" data-tab="calendar">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Calendar
     </button>
   </div>
   <div id="panel-body">
@@ -548,6 +606,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <div class="p-row"><div class="p-row-label"><strong>Position</strong></div><div class="pos-grid" id="grid-linksPosition"></div></div>
       <div class="p-label">Weather</div>
       <div class="p-row"><div class="p-row-label"><strong>Position</strong></div><div class="pos-grid" id="grid-weatherPosition"></div></div>
+      <div class="p-label">Quote</div>
+      <div class="p-row"><div class="p-row-label"><strong>Position</strong></div><div class="pos-grid" id="grid-quotePosition-layout"></div></div>
+      <div class="p-label">Calendar</div>
+      <div class="p-row"><div class="p-row-label"><strong>Position</strong></div><div class="pos-grid" id="grid-calendarPosition-layout"></div></div>
     </div>
 
     <div class="p-page" id="tab-bg">
@@ -572,6 +634,66 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <div class="p-row"><div class="p-row-label"><strong>Reset Background</strong></div><button class="p-btn danger" id="r-bg">Reset</button></div>
       <div class="p-row"><div class="p-row-label"><strong>Reset Links</strong></div><button class="p-btn danger" id="r-links">Reset</button></div>
       <div class="p-row"><div class="p-row-label"><strong>Wipe Everything</strong><span>Clears all data</span></div><button class="p-btn danger" id="r-all">Wipe All</button></div>
+    </div>
+
+    <div class="p-page" id="tab-quote">
+      <div class="p-label">Quran & Hadith</div>
+      <div class="p-row"><div class="p-row-label"><strong>Show Quote Widget</strong></div><label class="toggle"><input type="checkbox" id="quoteVisible"><div class="t-track"></div><div class="t-thumb"></div></label></div>
+      <div class="p-row"><div class="p-row-label"><strong>Source</strong></div>
+        <select class="p-sel" id="quoteSource">
+          <option value="quran">Quran only</option>
+          <option value="hadith">Hadith only</option>
+          <option value="both">Both (mixed)</option>
+        </select>
+      </div>
+      <div class="p-label">Widget Style</div>
+      <div class="swatch-grid" id="quote-style-grid"></div>
+      <div class="p-label">Arabic Font</div>
+      <div class="p-row"><div class="p-row-label"><strong>Font</strong></div>
+        <select class="p-sel" id="arabicFont">
+          <option value="system">System Arabic</option>
+          <option value="amiri">Amiri</option>
+          <option value="scheherazade">Scheherazade</option>
+          <option value="cairo">Cairo</option>
+          <option value="tajawal">Tajawal</option>
+          <option value="lateef">Lateef</option>
+          <option value="noto">Noto Naskh</option>
+        </select>
+      </div>
+      <div class="p-label">Quran Recitation</div>
+      <div class="p-row"><div class="p-row-label"><strong>Reciter</strong></div>
+        <select class="p-sel" id="quranReciter">
+          <option value="Alafasy_128kbps">Mishary Alafasy</option>
+          <option value="Abdul_Basit_Mujawwad_128kbps">Abdul Basit (Mujawwad)</option>
+          <option value="Abdul_Basit_Murattal_192kbps">Abdul Basit (Murattal)</option>
+          <option value="Husary_128kbps">Mahmoud Khalil Al-Husary</option>
+          <option value="Muhammad_Jibreel_128kbps">Muhammad Jibreel</option>
+          <option value="Abu_Bakr_Ash-Shaatree_128kbps">Abu Bakr Al-Shatri</option>
+          <option value="Minshawy_Murattal_128kbps">Mohamed Al-Minshawi</option>
+          <option value="MaherAlMuaiqly128kbps">Maher Al-Muaiqly</option>
+          <option value="Yasser_Ad-Dussary_128kbps">Yasser Al-Dosari</option>
+          <option value="Nasser_Alqatami_128kbps">Nasser Al-Qatami</option>
+        </select>
+      </div>
+      <div class="p-label">Position</div>
+      <div class="p-row"><div class="p-row-label"><strong>Position</strong></div><div class="pos-grid" id="grid-quotePosition"></div></div>
+    </div>
+
+    <div class="p-page" id="tab-calendar">
+      <div class="p-label">Calendar</div>
+      <div class="p-row"><div class="p-row-label"><strong>Show Calendar</strong><span>Uses your signed-in account</span></div><label class="toggle"><input type="checkbox" id="calendarVisible"><div class="t-track"></div><div class="t-thumb"></div></label></div>
+      <div class="p-row"><div class="p-row-label"><strong>Provider</strong></div>
+        <select class="p-sel" id="calendarProvider">
+          <option value="google">Google Calendar</option>
+          <option value="outlook">Outlook Calendar</option>
+        </select>
+      </div>
+      <div class="p-label">Widget Style</div>
+      <div class="swatch-grid" id="calendar-style-grid"></div>
+      <div class="p-label">Position</div>
+      <div class="p-row"><div class="p-row-label"><strong>Position</strong></div><div class="pos-grid" id="grid-calendarPosition"></div></div>
+      <div class="p-label">Note</div>
+      <div class="p-row"><div class="p-row-label"><span style="line-height:1.5">Your calendar loads in an iframe using your signed-in Google or Microsoft account. No data leaves your browser.</span></div></div>
     </div>
 
   </div>

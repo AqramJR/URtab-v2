@@ -3,13 +3,80 @@
 let S={}, links=[], tempLinks=[], clockTimer=null, saveTimer=null, saveToastTimer=null;
 let fadeTimer=null, weatherCelsius=null, forecastData=null, isMoving=false, userGallery=[];
 let prayerData=null, prayerDateStr=null, prayerHijri=null, favAnimFrame=null;
-let _lastNextPrayerIndex=-1;
+let _lastNextPrayerIndex=-1, quoteData=null, quoteAudio=null, quoteAudioPlaying=false;
 const _blobCache={};
 
-const WIDGET_IDS=['clock-wrap','weather-wrap','search-wrap','links-wrap','prayer-wrap'];
-const WIDGET_KEY={'clock-wrap':'clockPosition','weather-wrap':'weatherPosition',
-  'search-wrap':'searchPosition','links-wrap':'linksPosition','prayer-wrap':'prayerPosition'};
+const WIDGET_IDS=['clock-wrap','weather-wrap','search-wrap','links-wrap','prayer-wrap','quote-wrap','calendar-wrap'];
+const WIDGET_KEY={
+  'clock-wrap':'clockPosition','weather-wrap':'weatherPosition',
+  'search-wrap':'searchPosition','links-wrap':'linksPosition',
+  'prayer-wrap':'prayerPosition','quote-wrap':'quotePosition',
+  'calendar-wrap':'calendarPosition',
+};
 function $(id){return document.getElementById(id);}
+
+const HADITH_LIST=[
+  {ar:"خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ",text:"The best of you are those who learn the Quran and teach it.",source:"Sahih al-Bukhari 5027"},
+  {ar:"الْمُسْلِمُ مَنْ سَلِمَ الْمُسْلِمُونَ مِنْ لِسَانِهِ وَيَدِهِ",text:"A Muslim is one from whose tongue and hands the Muslims are safe.",source:"Sahih al-Bukhari 10"},
+  {ar:"لَا يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لِأَخِيهِ مَا يُحِبُّ لِنَفْسِهِ",text:"None of you truly believes until he loves for his brother what he loves for himself.",source:"Sahih al-Bukhari 13"},
+  {ar:"لَيْسَ الشَّدِيدُ بِالصُّرَعَةِ، إِنَّمَا الشَّدِيدُ الَّذِي يَمْلِكُ نَفْسَهُ عِنْدَ الْغَضَبِ",text:"The strong man is not one who wrestles others down. The strong man is the one who controls himself when angry.",source:"Sahih al-Bukhari 6114"},
+  {ar:"الطَّهُورُ شَطْرُ الْإِيمَانِ",text:"Cleanliness is half of faith.",source:"Sahih Muslim 223"},
+  {ar:"إِنَّ اللَّهَ لَا يَنْظُرُ إِلَى صُوَرِكُمْ وَأَمْوَالِكُمْ وَلَكِنْ يَنْظُرُ إِلَى قُلُوبِكُمْ وَأَعْمَالِكُمْ",text:"Allah does not look at your appearance or wealth, but He looks at your hearts and deeds.",source:"Sahih Muslim 2564"},
+  {ar:"يَسِّرُوا وَلَا تُعَسِّرُوا، وَبَشِّرُوا وَلَا تُنَفِّرُوا",text:"Make things easy, do not make them difficult. Give glad tidings, do not drive people away.",source:"Sahih al-Bukhari 69"},
+  {ar:"أَحَبُّ الْأَعْمَالِ إِلَى اللَّهِ أَدْوَمُهَا وَإِنْ قَلَّ",text:"The most beloved deeds to Allah are those done consistently, even if they are small.",source:"Sahih al-Bukhari 6465"},
+  {ar:"مَنْ كَانَ يُؤْمِنُ بِاللَّهِ وَالْيَوْمِ الْآخِرِ فَلْيَقُلْ خَيْرًا أَوْ لِيَصْمُتْ",text:"Whoever believes in Allah and the Last Day, let him speak good or remain silent.",source:"Sahih al-Bukhari 6018"},
+  {ar:"إِنَّ مَعَ الْعُسْرِ يُسْرًا",text:"Verily, with hardship comes ease.",source:"Quran 94:6"},
+  {ar:"لَا تُسْرِفُوا فِي الْمَاءِ وَلَوْ كُنْتُمْ عَلَى نَهَرٍ جَارٍ",text:"Do not waste water, even if you are at a flowing river.",source:"Ibn Majah 425"},
+  {ar:"أَطْعِمُوا الْجَائِعَ وَعُودُوا الْمَرِيضَ وَفُكُّوا الْعَانِيَ",text:"Feed the hungry, visit the sick, and free the captive.",source:"Sahih al-Bukhari 5373"},
+  {ar:"تَبَسُّمُكَ فِي وَجْهِ أَخِيكَ لَكَ صَدَقَةٌ",text:"Smiling at your brother is charity.",source:"Jami at-Tirmidhi 1956"},
+  {ar:"مَنْ نَفَّسَ عَنْ مُؤْمِنٍ كُرْبَةً مِنْ كُرَبِ الدُّنْيَا نَفَّسَ اللَّهُ عَنْهُ كُرْبَةً مِنْ كُرَبِ يَوْمِ الْقِيَامَةِ",text:"Whoever removes a worldly hardship from a believer, Allah will remove a hardship from him on the Day of Resurrection.",source:"Sahih Muslim 2699"},
+  {ar:"إِنَّ اللَّهَ رَفِيقٌ يُحِبُّ الرِّفْقَ فِي الْأَمْرِ كُلِّهِ",text:"Allah is gentle and loves gentleness in all matters.",source:"Sahih al-Bukhari 6927"},
+  {ar:"أَكْمَلُ الْمُؤْمِنِينَ إِيمَانًا أَحْسَنُهُمْ خُلُقًا",text:"The most perfect in faith are the best in character.",source:"Sunan Abi Dawud 4682"},
+  {ar:"الرِّفْقُ لَا يَكُونُ فِي شَيْءٍ إِلَّا زَانَهُ",text:"Gentleness is not added to anything except it beautifies it.",source:"Sahih Muslim 2594"},
+  {ar:"الْجَنَّةُ تَحْتَ أَقْدَامِ الْأُمَّهَاتِ",text:"Paradise lies under the feet of your mothers.",source:"Sunan an-Nasa'i 3104"},
+  {ar:"السَّاعِي عَلَى الْأَرْمَلَةِ وَالْمِسْكِينِ كَالْمُجَاهِدِ فِي سَبِيلِ اللَّهِ",text:"One who looks after a widow and the poor is like a warrior fighting for Allah's cause.",source:"Sahih al-Bukhari 5353"},
+  {ar:"قُلْ آمَنْتُ بِاللَّهِ ثُمَّ اسْتَقِمْ",text:"Say: I believe in Allah — then be steadfast.",source:"Sahih Muslim 38"},
+  {ar:"لَيْسَ الْمُؤْمِنُ الَّذِي يَشْبَعُ وَجَارُهُ جَائِعٌ",text:"He is not a believer who eats his fill while his neighbour is hungry.",source:"Mustadrak al-Hakim"},
+  {ar:"كُنْ فِي الدُّنْيَا كَأَنَّكَ غَرِيبٌ أَوْ عَابِرُ سَبِيلٍ",text:"Be in this world as though you were a stranger or a wayfarer.",source:"Sahih al-Bukhari 6416"},
+  {ar:"دَعْوَةُ الْمُسْلِمِ لِأَخِيهِ بِظَهْرِ الْغَيْبِ مُسْتَجَابَةٌ",text:"The supplication of a Muslim for his brother in his absence is answered.",source:"Sahih Muslim 2732"},
+  {ar:"مَنْ سَتَرَ مُسْلِمًا سَتَرَهُ اللَّهُ فِي الدُّنْيَا وَالْآخِرَةِ",text:"Whoever conceals a Muslim's faults, Allah will conceal his faults in this world and the next.",source:"Sahih Muslim 2590"},
+  {ar:"إِنَّ لِجَسَدِكَ عَلَيْكَ حَقًّا",text:"Your body has a right over you.",source:"Sahih al-Bukhari 1975"},
+  {ar:"كُلُّ مَعْرُوفٍ صَدَقَةٌ",text:"Every act of kindness is charity.",source:"Sahih al-Bukhari 2891"},
+  {ar:"اعْقِلْهَا وَتَوَكَّلْ",text:"Tie your camel, then put your trust in Allah.",source:"Jami at-Tirmidhi 2517"},
+  {ar:"مَنْ لَا يَشْكُرُ النَّاسَ لَا يَشْكُرُ اللَّهَ",text:"Whoever is not grateful to people is not grateful to Allah.",source:"Sunan Abi Dawud 4811"},
+  {ar:"إِذَا كُنْتُمْ ثَلَاثَةً فَلَا يَتَنَاجَى اثْنَانِ دُونَ الثَّالِثِ",text:"When you are three, do not let two speak in secret leaving the third out.",source:"Sahih Muslim 2184"},
+  {ar:"لِكُلِّ شَيْءٍ زَكَاةٌ وَزَكَاةُ الْجَسَدِ الصَّوْمُ",text:"Everything has its purification, and the purification of the body is fasting.",source:"Ibn Majah 1745"},
+];
+
+const ARABIC_FONTS=[
+  {id:'system',  name:'System Arabic', css:'serif'},
+  {id:'amiri',   name:'Amiri',         css:"'Amiri', serif",         url:'https://fonts.googleapis.com/css2?family=Amiri&display=swap'},
+  {id:'scheherazade', name:'Scheherazade', css:"'Scheherazade New', serif", url:'https://fonts.googleapis.com/css2?family=Scheherazade+New&display=swap'},
+  {id:'cairo',   name:'Cairo',          css:"'Cairo', sans-serif",   url:'https://fonts.googleapis.com/css2?family=Cairo&display=swap'},
+  {id:'tajawal', name:'Tajawal',        css:"'Tajawal', sans-serif", url:'https://fonts.googleapis.com/css2?family=Tajawal&display=swap'},
+  {id:'lateef',  name:'Lateef',         css:"'Lateef', serif",       url:'https://fonts.googleapis.com/css2?family=Lateef&display=swap'},
+  {id:'noto',    name:'Noto Naskh',     css:"'Noto Naskh Arabic', serif", url:'https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic&display=swap'},
+];
+
+const QUOTE_STYLE_DEFS=[
+  {id:'card',    name:'Card'},
+  {id:'minimal', name:'Minimal'},
+  {id:'glass',   name:'Glass'},
+  {id:'verse',   name:'Verse'},
+];
+
+const QURAN_RECITERS=[
+  {id:'Alafasy_128kbps',              name:'Mishary Alafasy'},
+  {id:'Abdul_Basit_Mujawwad_128kbps', name:'Abdul Basit (Mujawwad)'},
+  {id:'Abdul_Basit_Murattal_192kbps', name:'Abdul Basit (Murattal)'},
+  {id:'Husary_128kbps',               name:'Mahmoud Khalil Al-Husary'},
+  {id:'Muhammad_Jibreel_128kbps',     name:'Muhammad Jibreel'},
+  {id:'Abu_Bakr_Ash-Shaatree_128kbps',name:'Abu Bakr Al-Shatri'},
+  {id:'Minshawy_Murattal_128kbps',    name:'Mohamed Al-Minshawi'},
+  {id:'MaherAlMuaiqly128kbps',        name:'Maher Al-Muaiqly'},
+  {id:'Yasser_Ad-Dussary_128kbps',    name:'Yasser Al-Dosari'},
+  {id:'Nasser_Alqatami_128kbps',      name:'Nasser Al-Qatami'},
+];
 
 let _idb=null;
 function idbOpen(){
@@ -51,11 +118,12 @@ function idbClear(){
 }
 
 const OB_STEPS=[
-  {emoji:'🕌',title:'Welcome to UrTab',sub:'Your most-used browser tab, reimagined. Clock themes, Muslim prayer times, live weather with 5-day forecast, animated backgrounds — all in one.'},
+  {emoji:'🕌',title:'Welcome to UrTab',sub:'Your most-used browser tab, reimagined. Prayer times, Quran & Hadith quotes, live weather, calendar, animated backgrounds — all in one.'},
   {emoji:'🎨',title:'Beautiful Backgrounds',sub:'Choose from static or animated gradients, or upload your own image or video. Open Settings → BG to explore.'},
   {emoji:'🤲',title:'Muslim Prayer Times',sub:'Real-time Salah times with Hijri date based on your location. 4 widget styles. Open Settings → Prayer to set it up.'},
+  {emoji:'📖',title:'Quran & Hadith',sub:'A random verse or hadith on every tab, with Arabic text, English translation, and audio recitation from 10 reciters. Open Settings → Quote.'},
   {emoji:'⛅',title:'Live Weather',sub:'Current conditions plus a 5-day forecast, all from a free API — no account required. Open Settings → Clock to enable it.'},
-  {emoji:'⚙️',title:'Fully Customizable',sub:'Clock themes, search styles, link layouts, widget positions — every element is yours to configure in Settings.'},
+  {emoji:'📅',title:'Calendar',sub:'Embed your Google or Outlook Calendar directly on your new tab. No login needed — uses your existing Chrome session. Open Settings → Calendar.'},
   {emoji:'✨',title:"You're all set!",sub:'UrTab saves everything automatically. Open Settings anytime to customize your tab.'},
 ];
 let obStep=0;
@@ -201,7 +269,7 @@ function setVisible(id,show){
   }else{
     el.style.opacity='0';el.style.transform='translateY(8px) scale(0.97)';el.style.pointerEvents='none';
     setTimeout(()=>{
-      const still=(id==='clock-wrap'&&!S.clockVisible)||(id==='search-wrap'&&!S.searchVisible)||(id==='links-wrap'&&!S.linksVisible)||(id==='weather-wrap'&&!S.weatherVisible)||(id==='prayer-wrap'&&!S.prayerVisible);
+      const still=(id==='clock-wrap'&&!S.clockVisible)||(id==='search-wrap'&&!S.searchVisible)||(id==='links-wrap'&&!S.linksVisible)||(id==='weather-wrap'&&!S.weatherVisible)||(id==='prayer-wrap'&&!S.prayerVisible)||(id==='quote-wrap'&&!S.quoteVisible)||(id==='calendar-wrap'&&!S.calendarVisible);
       if(still)el.style.display='none';
     },500);
   }
@@ -209,7 +277,8 @@ function setVisible(id,show){
 function applyVisibility(){
   setVisible('clock-wrap',S.clockVisible);setVisible('search-wrap',S.searchVisible);
   setVisible('links-wrap',S.linksVisible);setVisible('weather-wrap',S.weatherVisible);
-  setVisible('prayer-wrap',S.prayerVisible);
+  setVisible('prayer-wrap',S.prayerVisible);setVisible('quote-wrap',S.quoteVisible);
+  setVisible('calendar-wrap',S.calendarVisible);
   $('date')?.classList.toggle('w-gone',!S.dateVisible);
 }
 
@@ -609,6 +678,146 @@ function updatePrayerCountdown(){
   if(cd)cd.textContent=formatCountdown(diffMins);
 }
 
+function applyArabicFont(){
+  const id=S.arabicFont||'amiri';
+  const def=ARABIC_FONTS.find(f=>f.id===id)||ARABIC_FONTS[1];
+  if(def.url){
+    let lk=document.getElementById('arabic-font-link');
+    if(!lk){lk=document.createElement('link');lk.id='arabic-font-link';lk.rel='stylesheet';document.head.appendChild(lk);}
+    lk.href=def.url;
+  }
+  let st=document.getElementById('arabic-font-style');
+  if(!st){st=document.createElement('style');st.id='arabic-font-style';document.head.appendChild(st);}
+  st.textContent=`.quote-arabic{font-family:${def.css}!important}`;
+}
+
+async function fetchQuote(){
+  const wrap=$('quote-wrap');if(!wrap)return;
+  wrap.innerHTML=`<div class="quote-loading">✦</div>`;
+  const src=S.quoteSource||'quran';
+  if(src==='hadith'){
+    const h=HADITH_LIST[Math.floor(Math.random()*HADITH_LIST.length)];
+    quoteData={type:'hadith',ar:h.ar,text:h.text,source:h.source};
+    renderQuote();return;
+  }
+  try{
+    const bust=Date.now();
+    const r=await fetch(`https://api.alquran.cloud/v1/ayah/random/editions/quran-simple,en.asad?_=${bust}`);
+    const j=await r.json();
+    if(j.code!==200||!j.data)throw new Error('bad');
+    const ar=j.data[0],en=j.data[1];
+    const ref=`${ar.surah.englishName} • ${ar.surah.number}:${ar.numberInSurah}`;
+    if(src==='both'&&Math.random()<0.4){
+      const h=HADITH_LIST[Math.floor(Math.random()*HADITH_LIST.length)];
+      quoteData={type:'hadith',ar:h.ar,text:h.text,source:h.source};
+    }else{
+      quoteData={type:'quran',arabic:ar.text,text:en.text,ref,surah:ar.surah.number,ayah:ar.numberInSurah};
+    }
+    renderQuote();
+  }catch{
+    if(src!=='quran'){
+      const h=HADITH_LIST[Math.floor(Math.random()*HADITH_LIST.length)];
+      quoteData={type:'hadith',ar:h.ar,text:h.text,source:h.source};renderQuote();
+    }else{
+      wrap.innerHTML=`<div class="quote-error" id="quote-retry">⚠ Tap to retry</div>`;
+      $('quote-retry')?.addEventListener('click',fetchQuote,{once:true});
+    }
+  }
+}
+
+function renderQuote(){
+  const wrap=$('quote-wrap');if(!wrap||!quoteData)return;
+  stopQuoteAudio();
+  applyArabicFont();
+  const q=quoteData;
+  const style=S.quoteStyle||'card';
+  const isQuran=q.type==='quran';
+  const reciter=S.quranReciter||'Alafasy_128kbps';
+
+  const arabicBlock=`<div class="quote-arabic">${isQuran?q.arabic:q.ar}</div>`;
+  const transBlock=isQuran
+    ?`<div class="quote-text">${q.text}</div>`
+    :`<div class="quote-text">"${q.text}"</div>`;
+  const refBlock=`<span class="quote-ref">${isQuran?q.ref:q.source}</span>`;
+  const playBtn=isQuran?`<button class="quote-play-btn" id="quote-play">▶</button>`:'';
+  const nextBtn=`<button class="quote-next-btn" id="quote-next">↻</button>`;
+  const typeTag=`<span class="quote-type-tag">${isQuran?'قرآن':'حديث'}</span>`;
+
+  let html='';
+  if(style==='card'){
+    html=`<div class="quote-inner quote-card">
+      ${typeTag}
+      ${arabicBlock}
+      ${transBlock}
+      <div class="quote-footer">${refBlock}<div class="quote-actions">${playBtn}${nextBtn}</div></div>
+    </div>`;
+  }else if(style==='minimal'){
+    html=`<div class="quote-inner quote-minimal">
+      ${arabicBlock}
+      <div class="quote-footer">${refBlock}<div class="quote-actions">${playBtn}${nextBtn}</div></div>
+    </div>`;
+  }else if(style==='glass'){
+    html=`<div class="quote-inner quote-glass">
+      ${typeTag}
+      ${arabicBlock}
+      ${transBlock}
+      <div class="quote-footer">${refBlock}<div class="quote-actions">${playBtn}${nextBtn}</div></div>
+    </div>`;
+  }else if(style==='verse'){
+    html=`<div class="quote-inner quote-verse">
+      ${typeTag}
+      ${arabicBlock}
+      ${transBlock}
+      <div class="quote-footer">${refBlock}<div class="quote-actions">${playBtn}${nextBtn}</div></div>
+    </div>`;
+  }
+
+  wrap.innerHTML=html;
+  $('quote-play')?.addEventListener('click',()=>toggleQuoteAudio(q.surah,q.ayah,reciter));
+  $('quote-next')?.addEventListener('click',fetchQuote);
+}
+
+function toggleQuoteAudio(surah,ayah,reciter){
+  if(quoteAudio&&quoteAudioPlaying){stopQuoteAudio();return;}
+  const s=String(surah).padStart(3,'0'),a=String(ayah).padStart(3,'0');
+  const url=`https://everyayah.com/data/${reciter}/${s}${a}.mp3`;
+  if(!quoteAudio||quoteAudio.src!==url){
+    stopQuoteAudio();
+    quoteAudio=new Audio(url);
+    quoteAudio.onended=()=>{quoteAudioPlaying=false;updatePlayBtn('▶');};
+    quoteAudio.onerror=()=>{quoteAudioPlaying=false;updatePlayBtn('▶');};
+  }
+  quoteAudio.play().then(()=>{quoteAudioPlaying=true;updatePlayBtn('■');}).catch(()=>{});
+}
+
+function stopQuoteAudio(){
+  if(quoteAudio){quoteAudio.pause();quoteAudio.currentTime=0;}
+  quoteAudioPlaying=false;updatePlayBtn('▶');
+}
+
+function updatePlayBtn(icon){const b=$('quote-play');if(b)b.textContent=icon;}
+
+function renderCalendar(){
+  const wrap=$('calendar-wrap');if(!wrap)return;
+  wrap.innerHTML='';
+  const provider=S.calendarProvider||'google';
+  const style=S.calendarStyle||'card';
+  let src='';
+  if(provider==='google'){
+    const bg=style==='glass'?'%230a0a16':'%230d0d1a';
+    src=`https://calendar.google.com/calendar/embed?showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0&mode=AGENDA&height=380&bgcolor=${bg}&color=%237c6af7&hl=en`;
+  }else{
+    src='https://outlook.live.com/calendar/0/view/month';
+  }
+  const outer=document.createElement('div');
+  outer.className=`cal-outer cal-${style}`;
+  const frame=document.createElement('iframe');
+  frame.src=src;frame.className='cal-frame';
+  frame.setAttribute('frameborder','0');frame.setAttribute('scrolling','no');
+  outer.appendChild(frame);
+  wrap.appendChild(outer);
+}
+
 function renderLinks(){
   const wrap=$('links-wrap');if(!wrap)return;
   wrap.innerHTML='';
@@ -816,19 +1025,64 @@ function buildPrayerStyleSwatches(){
   });
 }
 
+function buildQuoteStyleSwatches(){
+  const grid=$('quote-style-grid');if(!grid)return;grid.innerHTML='';
+  const PREVIEWS={
+    card:`<div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px 10px;max-width:130px">
+      <div style="font-size:11px;direction:rtl;color:#c9a84c;margin-bottom:4px;font-family:serif">بِسْمِ اللَّهِ</div>
+      <div style="font-size:8px;color:rgba(255,255,255,.5);font-style:italic">In the name of Allah</div>
+      <div style="font-size:7px;color:rgba(255,255,255,.3);margin-top:4px">Al-Fatiha • 1:1</div></div>`,
+    minimal:`<div style="max-width:130px;padding:4px 0">
+      <div style="font-size:13px;direction:rtl;color:#c9a84c;font-family:serif;text-align:center;margin-bottom:4px">بِسْمِ اللَّهِ</div>
+      <div style="font-size:7px;color:rgba(255,255,255,.3);text-align:center">Al-Fatiha • 1:1</div></div>`,
+    glass:`<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px 10px;max-width:130px;backdrop-filter:blur(8px);box-shadow:0 4px 24px rgba(0,0,0,.3)">
+      <div style="font-size:11px;direction:rtl;color:#c9a84c;margin-bottom:4px;font-family:serif">بِسْمِ اللَّهِ</div>
+      <div style="font-size:8px;color:rgba(255,255,255,.45);font-style:italic">In the name of Allah</div></div>`,
+    verse:`<div style="max-width:130px;padding:6px;border-left:2px solid rgba(124,106,247,.6)">
+      <div style="font-size:13px;direction:rtl;color:#c9a84c;font-family:serif;margin-bottom:4px">بِسْمِ اللَّهِ</div>
+      <div style="font-size:8px;color:rgba(255,255,255,.45);font-style:italic">In the name of Allah</div>
+      <div style="font-size:7px;color:rgba(124,106,247,.7);margin-top:4px">Al-Fatiha • 1:1</div></div>`,
+  };
+  QUOTE_STYLE_DEFS.forEach(st=>{
+    const sw=document.createElement('div');
+    sw.className='swatch-wide'+(S.quoteStyle===st.id?' active':'');
+    sw.innerHTML=`<div class="sw-preview">${PREVIEWS[st.id]||''}</div><div class="sw-label">${st.name}</div>`;
+    sw.addEventListener('click',()=>{S.quoteStyle=st.id;if(quoteData)renderQuote();buildQuoteStyleSwatches();scheduleSave();});
+    grid.appendChild(sw);
+  });
+}
+
+function buildCalendarStyleSwatches(){
+  const grid=$('calendar-style-grid');if(!grid)return;grid.innerHTML='';
+  const STYLES=[
+    {id:'card',    label:'Card',    preview:`<div style="background:rgba(10,10,22,.55);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:6px 8px;font-size:8px;color:rgba(255,255,255,.5)"><div style="color:var(--acc);margin-bottom:3px;font-size:9px">● Calendar</div><div>9:00 Fajr</div><div>14:00 Meeting</div></div>`},
+    {id:'minimal', label:'Minimal', preview:`<div style="padding:4px 0;font-size:8px;color:rgba(255,255,255,.5)"><div style="color:var(--acc);margin-bottom:3px;font-size:9px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:2px">Calendar</div><div>9:00 Fajr</div><div>14:00 Meeting</div></div>`},
+    {id:'glass',   label:'Glass',   preview:`<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px 8px;backdrop-filter:blur(8px);font-size:8px;color:rgba(255,255,255,.5)"><div style="color:var(--acc);margin-bottom:3px;font-size:9px">● Calendar</div><div>9:00 Fajr</div><div>14:00 Meeting</div></div>`},
+    {id:'verse',   label:'Bordered', preview:`<div style="border-left:2px solid var(--acc);padding:4px 8px;font-size:8px;color:rgba(255,255,255,.5)"><div style="color:var(--acc);margin-bottom:3px;font-size:9px">Calendar</div><div>9:00 Fajr</div><div>14:00 Meeting</div></div>`},
+  ];
+  STYLES.forEach(st=>{
+    const sw=document.createElement('div');
+    sw.className='swatch-wide'+(S.calendarStyle===st.id?' active':'');
+    sw.innerHTML=`<div class="sw-preview">${st.preview}</div><div class="sw-label">${st.label}</div>`;
+    sw.addEventListener('click',()=>{S.calendarStyle=st.id;if(S.calendarVisible)renderCalendar();buildCalendarStyleSwatches();scheduleSave();});
+    grid.appendChild(sw);
+  });
+}
+
 function openPanel(){
   document.body.classList.add('panel-open');
   clearTimeout(fadeTimer);document.body.classList.remove('faded');
   syncForm();buildGallery();
   buildThemeSwatches();buildSearchStyleSwatches();buildLinkStyleSwatches();
   buildWeatherStyleSwatches();buildSettingsStyleSwatches();buildPrayerStyleSwatches();
+  buildQuoteStyleSwatches();buildCalendarStyleSwatches();
 }
 function closePanel(){document.body.classList.remove('panel-open');if(S.autoFade)resetFadeTimer();}
 
 function syncForm(){
-  ['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','weatherVisible','autoFade','prayerVisible']
+  ['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','weatherVisible','autoFade','prayerVisible','quoteVisible','calendarVisible']
     .forEach(k=>{const el=$(k);if(el)el.checked=!!S[k];});
-  ['clockFormat','clockSize','searchEngine','videoSpeed','linksSize','weatherUnit','prayerMethod']
+  ['clockFormat','clockSize','searchEngine','videoSpeed','linksSize','weatherUnit','prayerMethod','quoteSource','quoteStyle','arabicFont','quranReciter','calendarProvider','calendarStyle']
     .forEach(k=>{const el=$(k);if(el)el.value=S[k];});
   const gn=$('greetingName');if(gn)gn.value=S.greetingName||'';
   const dimEl=$('videoDim'),dimV=$('videoDim-val');if(dimEl){dimEl.value=S.videoDim;if(dimV)dimV.textContent=S.videoDim+'%';}
@@ -837,7 +1091,7 @@ function syncForm(){
 }
 
 function buildPositionGrids(){
-  ['clockPosition','searchPosition','linksPosition','weatherPosition','prayerPosition'].forEach(key=>{
+  ['clockPosition','searchPosition','linksPosition','weatherPosition','prayerPosition','quotePosition','calendarPosition'].forEach(key=>{
     const grid=$('grid-'+key);if(!grid)return;grid.innerHTML='';
     POSITIONS_ORDER.forEach(pos=>{
       const cell=document.createElement('div');cell.className='pos-cell'+(S[key]===pos?' sel':'');
@@ -846,7 +1100,7 @@ function buildPositionGrids(){
         if(isMoving)return;isMoving=true;
         grid.querySelectorAll('.pos-cell').forEach(c=>c.classList.remove('sel'));cell.classList.add('sel');
         const old=S[key];S[key]=pos;
-        const wid=key==='clockPosition'?'clock-wrap':key==='searchPosition'?'search-wrap':key==='linksPosition'?'links-wrap':key==='prayerPosition'?'prayer-wrap':'weather-wrap';
+        const wid=key==='clockPosition'?'clock-wrap':key==='searchPosition'?'search-wrap':key==='linksPosition'?'links-wrap':key==='prayerPosition'?'prayer-wrap':key==='quotePosition'?'quote-wrap':key==='calendarPosition'?'calendar-wrap':'weather-wrap';
         if(pos!==old)await moveWidget(wid,pos);
         isMoving=false;scheduleSave();
       });
@@ -856,9 +1110,9 @@ function buildPositionGrids(){
 }
 
 function collectForm(){
-  ['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','weatherVisible','autoFade','prayerVisible']
+  ['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','weatherVisible','autoFade','prayerVisible','quoteVisible','calendarVisible']
     .forEach(k=>{const el=$(k);if(el)S[k]=el.checked;});
-  ['clockFormat','clockSize','searchEngine','videoSpeed','linksSize','weatherUnit']
+  ['clockFormat','clockSize','searchEngine','videoSpeed','linksSize','weatherUnit','quoteSource','quoteStyle','arabicFont','quranReciter','calendarProvider','calendarStyle']
     .forEach(k=>{const el=$(k);if(el)S[k]=el.value;});
   const pm=$('prayerMethod');if(pm)S.prayerMethod=parseInt(pm.value);
   const gn=$('greetingName');if(gn)S.greetingName=gn.value;
@@ -918,14 +1172,35 @@ async function init(){
     if(document.hidden){
       clearTimeout(favAnimFrame);favAnimFrame=null;
       clearInterval(clockTimer);clockTimer=null;
+      stopQuoteAudio();
     }else{
       if(!favAnimFrame)animateFavicon();
       startClock();
     }
   });
 
+  $('quoteVisible')?.addEventListener('change',()=>{
+    collectForm();applyVisibility();
+    if(S.quoteVisible&&!quoteData)fetchQuote();
+    scheduleSave();
+  });
+  $('quoteSource')?.addEventListener('change',()=>{collectForm();quoteData=null;if(S.quoteVisible)fetchQuote();scheduleSave();});
+  $('quoteStyle')?.addEventListener('change',()=>{collectForm();if(quoteData)renderQuote();scheduleSave();});
+  $('arabicFont')?.addEventListener('change',()=>{collectForm();applyArabicFont();if(quoteData)renderQuote();scheduleSave();});
+  $('quranReciter')?.addEventListener('change',()=>{collectForm();stopQuoteAudio();if(quoteData?.type==='quran')renderQuote();scheduleSave();});
+  $('calendarVisible')?.addEventListener('change',()=>{
+    collectForm();applyVisibility();
+    if(S.calendarVisible)renderCalendar();
+    scheduleSave();
+  });
+  $('calendarProvider')?.addEventListener('change',()=>{collectForm();if(S.calendarVisible)renderCalendar();scheduleSave();});
+  $('calendarStyle')?.addEventListener('change',()=>{collectForm();if(S.calendarVisible)renderCalendar();scheduleSave();});
+
   if(S.weatherVisible)fetchWeather();
   if(S.prayerVisible)fetchPrayerTimes();
+  if(S.quoteVisible)fetchQuote();
+  else applyArabicFont();
+  if(S.calendarVisible)renderCalendar();
 
   requestAnimationFrame(()=>{const l=$('loader');if(l){l.classList.add('done');setTimeout(()=>l.remove(),1100);}});
 
@@ -1007,7 +1282,7 @@ async function init(){
     Object.values(_blobCache).forEach(u=>URL.revokeObjectURL(u));
     Object.keys(_blobCache).forEach(k=>delete _blobCache[k]);
     S={...DEFAULT_SETTINGS};links=[...DEFAULT_LINKS];userGallery=[];
-    prayerData=null;prayerHijri=null;prayerDateStr=null;_lastNextPrayerIndex=-1;forecastData=null;
+    prayerData=null;prayerHijri=null;prayerDateStr=null;_lastNextPrayerIndex=-1;forecastData=null;quoteData=null;stopQuoteAudio();
     placeAllWidgets();applyAll();renderLinks();syncForm();
     applyGradient(0);showBgLayer('gradient');
     const img=$('bg-image'),vid=$('bg-video');
