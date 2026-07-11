@@ -2,10 +2,13 @@
 
 # UrTab
 
-**A beautiful, Muslim-friendly Chrome new tab — prayer times, live weather, animated backgrounds, and six clock themes. Zero dependencies, no account required.**
-
-![Version](https://img.shields.io/badge/version-2.0-7c6af7?style=flat-square)
+**A Muslim-friendly Chrome, Firefox & Edge new tab — prayer times, Quran & Hadith with audio, live weather, interactive backgrounds, and six clock themes. Zero dependencies, no account required.**
+(.assets/hero.gif)
+![Version](https://img.shields.io/badge/version-2.2-7c6af7?style=flat-square)
 ![Manifest](https://img.shields.io/badge/manifest-v3-5edf82?style=flat-square)
+![Chrome](https://img.shields.io/badge/Chrome-✓-4285F4?style=flat-square)
+![Firefox](https://img.shields.io/badge/Firefox-✓-FF7139?style=flat-square)
+![Edge](https://img.shields.io/badge/Edge-✓-0078D4?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-d4a843?style=flat-square)
 
 </div>
@@ -15,62 +18,81 @@
 ## Features
 
 ### 🕌 Prayer Times
-- Real-time Salah times based on GPS location, powered by [Aladhan API](https://aladhan.com/prayer-times-api)
+- Real-time Salah times from GPS location via [Aladhan API](https://aladhan.com/prayer-times-api)
 - Hijri date shown in every style
-- Advances automatically as each prayer passes — no manual refresh
+- Advances automatically as each prayer passes
 - **4 widget styles:** Minimal · Bar · Card · Mosque
 - **6 calculation methods:** Egyptian · Umm Al-Qura · ISNA · MWL · Karachi · Diyanet
 - Auto-refreshes at midnight
 
+### 📖 Quran & Hadith
+- Random Quran verse (Arabic + English translation) or Hadith on every tab
+- Arabic text with 7 selectable typefaces (Amiri, Scheherazade, Cairo, Tajawal, Lateef, Noto Naskh, System)
+- **▶ Audio recitation** from 10 reciters via [everyayah.com](https://everyayah.com/)
+- **10 reciters:** Mishary Alafasy · Abdul Basit (×2) · Al-Husary · Muhammad Jibreel · Abu Bakr Al-Shatri · Mohamed Al-Minshawi · Maher Al-Muaiqly · Yasser Al-Dosari · Nasser Al-Qatami
+- **3 sources:** Quran only · Hadith only · Both (mixed)
+- **4 widget styles:** Card · Minimal · Glass · Verse
+- Cache-busted fetch — a different verse every time
+
 ### ⛅ Weather
 - Current conditions + **5-day forecast** via [Open-Meteo](https://open-meteo.com/) — free, no API key
-- **4 styles:** Pill · Card · Minimal · Forecast (with high/low temps and rain probability)
+- **4 styles:** Pill · Card · Minimal · Forecast (high/low + rain probability)
 - Celsius or Fahrenheit
-- Location cached cross-session — weather loads instantly on every new tab
+- Location cached cross-session — loads instantly on every new tab
 
 ### 🎨 Backgrounds
-- **12 gradient presets** — 8 static, 4 animated (slow-shifting color loops)
+- **8 static gradient presets** (Midnight · Nebula · Aurora · Ocean · Abyss · Crimson · Forest · Ember)
+- **3 CSS-animated presets** — Aurora (hue-shifting), Floating Orbs (bokeh), Cascading Waves
+- **5 interactive canvas presets** — react to mouse velocity and proximity:
+  - Constellation Web · Gravity Grid · Orbital Swarm · Vector Field · Kinetic Mesh
 - Upload your own **image** or **video** loop
-  - Video stored via IndexedDB — 16 MB files load in under a second
-  - Adjustable overlay darkness and playback speed
-  - Mute/unmute button
+  - Videos stored via IndexedDB — no base64 bloat, 16 MB loads in under a second
+  - Adjustable overlay darkness and playback speed, mute/unmute
 
 ### 🕐 Clock
 - **6 themes:** Minimal · Editorial · Neon · Mono · Display · Luxury
 - 12h / 24h format, 4 sizes
 - Optional greeting: *Good Morning / Afternoon / Evening, Name*
 - Display theme supports the Anurati typeface (optional font file)
+- Animated favicon — live clock hand in the browser tab
+
+### 📅 Calendar
+- Embed Google Calendar or Outlook directly on your new tab
+- Uses your already-signed-in browser session — no OAuth, no keys
+- **4 styles:** Card · Minimal · Glass · Bordered
 
 ### 🔍 Search & Links
 - 4 search styles, 4 engines (Google · Bing · DuckDuckGo · Brave)
 - 6 link styles, 3 icon sizes, fully editable shortcuts
 
-### ⚙️ Layout & More
-- Every widget has a **3×3 position grid** — drag-free placement
-- Auto-fade on inactivity (configurable delay)
-- Animated favicon — live clock in the browser tab
-- Settings toggle (open/close), keyboard shortcut: `Esc`
+### ⚙️ Layout
+- Every widget has a **3×3 position grid**
+- Auto-fade on inactivity (5–60s delay)
+- Settings panel with 8 tabs, toggle open/close, `Esc` to close
 
 ---
 
 ## Installation
 
+### Chrome / Edge
+
 > **No build step. No npm. Just unzip and load.**
 
-1. Download `newtab-extension.zip` from [Releases](../../releases)
-2. Unzip it
-3. Open Chrome → `chrome://extensions`
-4. Enable **Developer mode** (top-right toggle)
-5. Click **Load unpacked** → select the unzipped folder
-6. Open a new tab
+1. Download `newtab-extension.zip` from [Releases](../../releases) and unzip
+2. Open Chrome → `chrome://extensions` (Edge → `edge://extensions`)
+3. Enable **Developer mode** (top-right toggle)
+4. Click **Load unpacked** → select the unzipped folder
+5. Open a new tab
 
-To update: replace the folder contents and click ↺ on the extension card.
+### Firefox
+
+via Firefox add-ons (under-review)
 
 ---
 
 ## Screenshots
 
-> *(Add your screenshots here)*
+
 
 ---
 
@@ -78,8 +100,8 @@ To update: replace the folder contents and click ↺ on the extension card.
 
 | Permission | Why |
 |---|---|
-| `storage` | Saves settings, backgrounds, links, and cached location |
-| `geolocation` | Required for prayer times and weather |
+| `storage` | Settings, backgrounds, links, cached location |
+| `geolocation` | Prayer times and weather |
 
 No tracking. No analytics. No ads. No external scripts.
 
@@ -87,55 +109,77 @@ No tracking. No analytics. No ads. No external scripts.
 
 ## APIs Used
 
-All completely free — no account or API key needed.
+All free — no account or API key needed.
 
 | API | Purpose |
 |---|---|
 | [Open-Meteo](https://open-meteo.com/) | Current weather + 7-day forecast |
-| [BigDataCloud](https://www.bigdatacloud.com/) | City name from coordinates |
+| [BigDataCloud](https://www.bigdatacloud.com/) | City name from GPS coordinates |
 | [Aladhan](https://aladhan.com/prayer-times-api) | Prayer times + Hijri date |
+| [alquran.cloud](https://alquran.cloud/api) | Random Quran verse (Arabic + English) |
+| [everyayah.com](https://everyayah.com/) | Quran audio recitation MP3s |
 
 ---
 
-## Fonts (optional)
-
-The **Display** clock theme uses [Anurati](https://www.behance.net/gallery/31547519/Anurati-Free-typeface). It falls back to Orbitron if not present.
-
-To install: place `Anurati.woff2` + `Anurati.woff` in the `fonts/` folder, then reload the extension.
-
----
 
 ## Architecture
 
 ```
 newtab-extension/
-├── manifest.json     Chrome MV3 manifest
+├── manifest.json     MV3 manifest (Chrome, Firefox, Edge compatible)
 ├── newtab.html       UI + all CSS (single file)
-├── settings.js       Constants, defaults, storage helpers
-├── newtab.js         All application logic
+├── settings.js       Constants, defaults, IndexedDB helpers
+├── newtab.js         All application logic + canvas engine
 ├── fonts/            Drop Anurati font files here
 └── icons/            16 · 32 · 48 · 128 px
 ```
 
-Pure HTML + CSS + vanilla JS. No bundler, no framework, no node_modules.
+Zero external dependencies — no bundler, no framework, no node_modules.
 
-**Video storage:** Uploaded videos are stored as raw `File` objects in IndexedDB (not base64 in `localStorage`). Playback uses `URL.createObjectURL()` — a 16 MB video loads in under a second.
+### Cross-Browser Compatibility
+A shim at the top of `newtab.js` maps `chrome.storage.*` to `browser.storage.*` when running in Firefox, where the `chrome` namespace is unavailable. The rest of the codebase uses only standard Web APIs (Canvas, IndexedDB, ResizeObserver, Fetch, Geolocation) supported in all three browsers.
+
+### Canvas Engine (Cold-Start Fix)
+The interactive canvas `applyGradient` override is initialized **before** the BG restore call in `init()`. A `startInteractiveCanvas()` wrapper retries via `requestAnimationFrame` if `window.innerWidth` is still 0 at browser startup. A `ResizeObserver` on `document.body` catches layout resolution and re-initializes the canvas if dimensions changed or particles failed to populate.
+
+### Geolocation (Two-Stage)
+1. **Instant** — serve cached coordinates from `chrome.storage.local`
+2. **Background** — fresh GPS fetch; re-fetch data only if location moved >1 km
+
+### Video Storage
+Raw `File` objects stored in IndexedDB (not base64). Playback via `URL.createObjectURL()`. A 16 MB video loads in under a second.
 
 ---
 
 ## Changelog
 
+### v2.2
+- **Cold-start canvas fix** — interactive BG presets now render correctly on fresh Chrome restart; the canvas engine override is initialized before the BG restore, with a `requestAnimationFrame` retry loop for zero-width startups
+- **Firefox & Edge compatibility** — `chrome.*` API shim, `browser_specific_settings` in manifest, canvas `display:block` fix
+- Canvas animation loop now pauses when tab is hidden (Page Visibility API)
+- Version bumped to 2.2
+
+### v2.1
+- Settings button toggles panel open/close
+- 5-day weather forecast style
+- 4 animated + 5 interactive canvas backgrounds
+- Quote & Calendar widgets
+- Panel restructured to 8 tabs (dedicated Weather tab, BG moved to first)
+- Mute button slides with panel
+- Arabic fonts (7 options via Google Fonts)
+- 10 Quran reciters (3 broken IDs fixed, 2 new added)
+- Calendar styles (Card · Minimal · Glass · Bordered)
+
 ### v2.0 — Complete rewrite
-- Muslim prayer times widget with 4 styles and Hijri date
-- 5-day weather forecast (same free API)
-- 4 animated gradient backgrounds
-- 6 clock themes including Display/Anurati
-- Video backgrounds via IndexedDB (instant load, any size)
-- Animated favicon (live clock in browser tab)
-- Settings panel with 6 tabs, toggle open/close
+- Prayer times with 4 styles and Hijri date
+- Quran & Hadith widget with Arabic text and audio
+- Animated favicon
 - Geolocation persisted cross-session
-- Page Visibility API — pauses when tab is hidden
+- Video backgrounds via IndexedDB
 - Zero dependencies
+
+### v1.0 – v1.9
+- Core MV3 architecture, six clock themes, gallery, weather, search, links, onboarding
 
 ---
 

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "UrTab",
-  "version": "2.1",
-  "description": "Your Tab, Elevated. Prayer times, Quran quotes with audio, calendar, live weather, animated backgrounds.",
+  "version": "2.2",
+  "description": "Your Tab, Elevated. Prayer times, Quran quotes with audio, calendar, live weather, interactive animated backgrounds.",
   "chrome_url_overrides": { "newtab": "newtab.html" },
   "permissions": ["storage", "geolocation"],
   "icons": {
@@ -19,6 +19,12 @@
       "128": "icons/icon128.png"
     },
     "default_title": "UrTab"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "urtab@extension",
+      "strict_min_version": "109.0"
+    }
   },
   "content_security_policy": {
     "extension_pages": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; media-src 'self' blob: data: https://everyayah.com; img-src 'self' data: blob:; connect-src https://api.open-meteo.com https://api.bigdatacloud.net https://api.aladhan.com https://api.alquran.cloud; frame-src https://calendar.google.com https://outlook.live.com; form-action *;"
