@@ -74,6 +74,10 @@ const PRESET_GRADIENTS = [
 	{ bg:'#06060c', name:'Orbital Swarm',     anim:'anim-swarm',         interactive:'swarm' },
 	{ bg:'#06060c', name:'Vector Field',      anim:'anim-field',         interactive:'field' },
 	{ bg:'#06060c', name:'Kinetic Mesh',      anim:'anim-mesh',          interactive:'mesh' },
+	{ bg:'#03030a', name:'Liquid Metal',      anim:'anim-liquid',        interactive:'liquid' },
+	{ bg:'#010108', name:'Aurora Curtain',    anim:'anim-curtain',       interactive:'curtain' },
+	{ bg:'#02020c', name:'Neon Rain',         anim:'anim-neonrain',      interactive:'neonrain' },
+	{ bg:'#05040e', name:'Sand Dunes',        anim:'anim-sand',          interactive:'sand' },
 ];
 
 const POSITIONS_ORDER = [

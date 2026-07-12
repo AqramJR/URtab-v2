@@ -15,6 +15,12 @@ if(typeof globalThis.chrome==='undefined'||!globalThis.chrome.storage){
 	}}};
 }
 
+
+function safeHTML(el,html){
+	const doc=new DOMParser().parseFromString('<body>'+html+'</body>','text/html');
+	el.replaceChildren(...Array.from(doc.body.childNodes));
+}
+
 let S={}, links=[], tempLinks=[], clockTimer=null, saveTimer=null, saveToastTimer=null;
 let fadeTimer=null, weatherCelsius=null, forecastData=null, isMoving=false, userGallery=[];
 let prayerData=null, prayerDateStr=null, prayerHijri=null, favAnimFrame=null;
@@ -138,7 +144,7 @@ const OB_STEPS=[
 	{emoji:'🤲',title:'Muslim Prayer Times',sub:'Real-time Salah times with Hijri date based on your location. 4 widget styles. Open Settings → Prayer to set it up.'},
 	{emoji:'📖',title:'Quran & Hadith',sub:'A random verse or hadith on every tab, with Arabic text, English translation, and audio recitation from 10 reciters. Open Settings → Quote.'},
 	{emoji:'⛅',title:'Live Weather',sub:'Current conditions plus a 5-day forecast, all from a free API — no account required. Open Settings → Clock to enable it.'},
-	{emoji:'📅',title:'Calendar',sub:'Embed your Google Calendar directly on your new tab. No login needed — uses your existing session. Open Settings → Calendar.'},
+	{emoji:'📅',title:'Calendar',sub:'Embed your Google or Outlook Calendar directly on your new tab. No login needed — uses your existing Chrome session. Open Settings → Calendar.'},
 	{emoji:'✨',title:"You're all set!",sub:'UrTab saves everything automatically. Open Settings anytime to customize your tab.'},
 ];
 let obStep=0;
@@ -161,7 +167,7 @@ function renderObStep(){
 	$('ob-sub').textContent=step.sub;
 	$('ob-next').textContent=obStep<OB_STEPS.length-1?'Next →':'Start Now';
 	$('ob-skip').style.display=obStep<OB_STEPS.length-1?'':'none';
-	const dots=$('ob-dots');dots.innerHTML='';
+	const dots=$('ob-dots');safeHTML(dots,'');
 	OB_STEPS.forEach((_,i)=>{
 		const d=document.createElement('div');d.className='ob-dot'+(i===obStep?' on':'');
 		dots.appendChild(d);
@@ -323,6 +329,12 @@ function showBgLayer(type){
 	if(snd)snd.classList.remove('visible');if(spd)spd.style.opacity='0.35';
 	if(type==='image'&&img){img.style.display='block';requestAnimationFrame(()=>requestAnimationFrame(()=>{if(img.complete&&img.naturalWidth)img.classList.add('loaded');}));}
 	else if(type==='video'&&vid){vid.style.display='block';if(snd)snd.classList.add('visible');if(spd)spd.style.opacity='';}
+	if(type==='image'||type==='video'){
+		const cv=$('bg-canvas');
+		if(cv){cv.style.display='none';}
+		if(typeof bgAnimFrame!=='undefined'&&bgAnimFrame){cancelAnimationFrame(bgAnimFrame);bgAnimFrame=null;}
+		if(typeof activeInteractiveMode!=='undefined')activeInteractiveMode=null;
+	}
 }
 function applyGradient(i){
 	const p=PRESET_GRADIENTS[i]||PRESET_GRADIENTS[0];
@@ -454,7 +466,7 @@ function renderWeatherForecast(){
 	if(!fc){fc=document.createElement('div');fc.id='weather-forecast';wrap.appendChild(fc);}
 	const days=forecastData.time?.slice(0,5)||[];
 	const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-	fc.innerHTML=days.map((dateStr,idx)=>{
+	safeHTML(fc,days.map((dateStr,idx)=>{
 		const d=new Date(dateStr+'T00:00:00');
 		const label=idx===0?'Today':dayNames[d.getDay()];
 		const wmo=getWMO(forecastData.weathercode[idx]);
@@ -468,7 +480,7 @@ function renderWeatherForecast(){
 		<span class="fc-rain">${rain>0?`💧${rain}%`:''}</span>
 		<span class="fc-temps"><span class="fc-hi">${hi}</span><span class="fc-lo">${lo}</span></span>
 		</div>`;
-	}).join('');
+	}).join(''));
 }
 
 function tempDisplay(c){
@@ -486,7 +498,7 @@ function renderWeatherTemp(){
 function buildWeatherAnim(cat){
 	const anim=$('weather-anim');if(!anim)return;
 	const wrap=$('weather-wrap');if(!wrap)return;
-	anim.innerHTML='';wrap.className=wrap.className.replace(/wx-\w+/g,'').trim();
+	safeHTML(anim,'');wrap.className=wrap.className.replace(/wx-\w+/g,'').trim();
 	if(cat==='clear'){
 		wrap.classList.add('wx-clear');
 		for(let i=0;i<8;i++){const r=document.createElement('div');r.className='wx-ray';r.style.cssText=`top:50%;left:20px;transform:rotate(${i*45}deg);animation-duration:${2+i*.2}s;animation-delay:${i*.25}s`;anim.appendChild(r);}
@@ -503,7 +515,7 @@ function buildWeatherAnim(cat){
 
 async function fetchPrayerTimes(){
 	const wrap=$('prayer-wrap');if(!wrap)return;
-	wrap.innerHTML=`<div style="font-size:11px;color:rgba(255,255,255,.4);padding:12px 16px;letter-spacing:1px">🕌 Locating…</div>`;
+	safeHTML(wrap,`<div style="font-size:11px;color:rgba(255,255,255,.4);padding:12px 16px;letter-spacing:1px">🕌 Locating…</div>`);
 	try{
 		const pos=await getGeoPos();
 		const {latitude:lat,longitude:lon}=pos.coords;
@@ -522,7 +534,7 @@ async function fetchPrayerTimes(){
 		renderPrayer();
 		}catch(e){
 		if(wrap){
-			wrap.innerHTML='';
+			safeHTML(wrap,'');
 			
 			const errDiv=document.createElement('div');
 			errDiv.style.cssText='font-size:11px;color:rgba(255,120,80,.7);padding:12px 16px;cursor:pointer';
@@ -568,7 +580,7 @@ function renderPrayer(){
 	const next=getNextPrayer();
 	
 	_lastNextPrayerIndex=next?next.index:-1;
-	wrap.innerHTML='';
+	safeHTML(wrap,'');
 	
 	wrap.className=wrap.className.split(' ').filter(c=>!c.startsWith('style-')).join(' ');
 	
@@ -583,101 +595,112 @@ function hijriStr(){
 	return`${prayerHijri.day} ${prayerHijri.month} ${prayerHijri.year} AH`;
 }
 
-function renderPrayerMinimal(wrap,next,nowMins){
+function renderPrayerMinimal(wrap, next, nowMins) {
 	wrap.classList.add('style-minimal');
-	if(!next){wrap.innerHTML='<span style="opacity:.4">--</span>';return;}
-	const diffMins=Math.max(0,Math.round(next.mins-nowMins));
-	const hDate=hijriStr();
-	wrap.innerHTML=`
-    <span class="prayer-minimal-icon">${next.icon}</span>
-    <div class="prayer-minimal-info">
-	${hDate?`<div class="prayer-minimal-hijri">${hDate}</div>`:''}
-	<div class="prayer-minimal-name">${next.name}</div>
-	<div class="prayer-minimal-time">${S.clockFormat==='12h'?fmt12(next.time):next.time}</div>
-	<div class="prayer-minimal-countdown">${formatCountdown(diffMins)}</div>
-    </div>`;
+	if (!next) { safeHTML(wrap, '<span style="opacity:.4">--</span>'); return; }
+	const diffMins = Math.max(0, Math.round(next.mins - nowMins));
+	const hDate = hijriStr();
+	safeHTML(wrap, `
+		<span class="prayer-minimal-icon">${next.icon}</span>
+		<div class="prayer-minimal-info">
+		${hDate ? `<div class="prayer-minimal-hijri">${hDate}</div>` : ''}
+		<div class="prayer-minimal-name">${next.name}</div>
+		<div class="prayer-minimal-time">${S.clockFormat === '12h' ? fmt12(next.time) : next.time}</div>
+		<div class="prayer-minimal-countdown">${formatCountdown(diffMins)}</div>
+		</div>
+	`);
 }
 
-function renderPrayerBar(wrap,next,nowMins){
+function renderPrayerBar(wrap, next, nowMins) {
 	wrap.classList.add('style-bar');
-	const hdr=document.createElement('div');hdr.className='prayer-bar-header';
-	const hDate=hijriStr();
-	hdr.innerHTML=`
-    <span class="prayer-bar-title">🕌 Prayer Times${hDate?`<span class="prayer-bar-hijri">${hDate}</span>`:''}</span>
-    ${next?`<span class="prayer-bar-next">Next: ${next.name}</span>`:''}`;
+	const hdr = document.createElement('div');
+	hdr.className = 'prayer-bar-header';
+	const hDate = hijriStr();
+	safeHTML(hdr, `
+		<span class="prayer-bar-title">🕌 Prayer Times${hDate ? `<span class="prayer-bar-hijri">${hDate}</span>` : ''}</span>
+		${next ? `<span class="prayer-bar-next">Next: ${next.name}</span>` : ''}
+	`);
 	wrap.appendChild(hdr);
-	const pills=document.createElement('div');pills.className='prayer-bar-pills';
-	PRAYER_KEYS.forEach((key,i)=>{
-		const t=prayerData[key];if(!t)return;
-		const mins=timeToMins(t);
-		const passed=mins<nowMins;
-		const isNext=next&&next.index===i;
-		const pill=document.createElement('div');
-		pill.className='prayer-pill'+(isNext?' active-prayer':passed?' passed':'');
-		pill.innerHTML=`<span class="prayer-pill-icon">${PRAYER_ICONS[i]}</span><span class="prayer-pill-name">${PRAYER_NAMES[i]}</span><span class="prayer-pill-time">${S.clockFormat==='12h'?fmt12(t):t}</span>`;
+	
+	const pills = document.createElement('div');
+	pills.className = 'prayer-bar-pills';
+	PRAYER_KEYS.forEach((key, i) => {
+		const t = prayerData[key]; if (!t) return;
+		const mins = timeToMins(t);
+		const passed = mins < nowMins;
+		const isNext = next && next.index === i;
+		const pill = document.createElement('div');
+		pill.className = 'prayer-pill' + (isNext ? ' active-prayer' : passed ? ' passed' : '');
+		safeHTML(pill, `<span class="prayer-pill-icon">${PRAYER_ICONS[i]}</span><span class="prayer-pill-name">${PRAYER_NAMES[i]}</span><span class="prayer-pill-time">${S.clockFormat === '12h' ? fmt12(t) : t}</span>`);
 		pills.appendChild(pill);
 	});
 	wrap.appendChild(pills);
 }
 
-function renderPrayerCard(wrap,next,nowMins){
+function renderPrayerCard(wrap, next, nowMins) {
 	wrap.classList.add('style-card');
-	const hdr=document.createElement('div');hdr.className='prayer-card-header';
-	const hDate=hijriStr();
-	hdr.innerHTML=`
-    <span class="prayer-card-title">🕌 Prayer Times</span>
-    <span class="prayer-card-date">
-	<span class="prayer-card-greg">${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
-	${hDate?`<span class="prayer-card-hijri">${hDate}</span>`:''}
-    </span>`;
+	const hdr = document.createElement('div');
+	hdr.className = 'prayer-card-header';
+	const hDate = hijriStr();
+	safeHTML(hdr, `
+		<span class="prayer-card-title">🕌 Prayer Times</span>
+		<span class="prayer-card-date">
+		<span class="prayer-card-greg">${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+		${hDate ? `<span class="prayer-card-hijri">${hDate}</span>` : ''}
+		</span>
+	`);
 	wrap.appendChild(hdr);
-	const list=document.createElement('div');list.className='prayer-card-list';
-	PRAYER_KEYS.forEach((key,i)=>{
-		const t=prayerData[key];if(!t)return;
-		const mins=timeToMins(t);const passed=mins<nowMins;const isNext=next&&next.index===i;
-		const row=document.createElement('div');
-		
-		row.className='prayer-card-row'+(isNext?' active-prayer':passed?' passed':'');
-		row.innerHTML=`
-		<span class="prow-icon">${PRAYER_ICONS[i]}</span>
-		<span class="prow-name">${PRAYER_NAMES[i]}</span>
-		<span class="prow-name-ar">${PRAYER_NAMES_AR[i]}</span>
-		<span class="prow-time">${S.clockFormat==='12h'?fmt12(t):t}</span>
-		${isNext?'<span class="prow-badge">Next</span>':''}`;
+	
+	const list = document.createElement('div');
+	list.className = 'prayer-card-list';
+	PRAYER_KEYS.forEach((key, i) => {
+		const t = prayerData[key]; if (!t) return;
+		const mins = timeToMins(t); const passed = mins < nowMins; const isNext = next && next.index === i;
+		const row = document.createElement('div');
+		row.className = 'prayer-card-row' + (isNext ? ' active-prayer' : passed ? ' passed' : '');
+		safeHTML(row, `
+			<span class="prow-icon">${PRAYER_ICONS[i]}</span>
+			<span class="prow-name">${PRAYER_NAMES[i]}</span>
+			<span class="prow-name-ar">${PRAYER_NAMES_AR[i]}</span>
+			<span class="prow-time">${S.clockFormat === '12h' ? fmt12(t) : t}</span>
+			${isNext ? '<span class="prow-badge">Next</span>' : ''}
+		`);
 		list.appendChild(row);
 	});
 	wrap.appendChild(list);
 }
 
-function renderPrayerMosque(wrap,next,nowMins){
+function renderPrayerMosque(wrap, next, nowMins) {
 	wrap.classList.add('style-mosque');
-	if(next){
-		const diffMins=Math.max(0,Math.round(next.mins-nowMins));
-		const hDate=hijriStr();
-		const hero=document.createElement('div');hero.className='prayer-mosque-hero';
-		hero.innerHTML=`
-		<div class="prayer-mosque-crescent">☽</div>
-		${hDate?`<div class="prayer-mosque-hijri">${hDate}</div>`:''}
-		<div class="prayer-mosque-next-label">Next Prayer</div>
-		<div class="prayer-mosque-next-name">${next.nameAr}</div>
-		<div class="prayer-mosque-next-name-en">${next.name}</div>
-		<div class="prayer-mosque-next-time">${S.clockFormat==='12h'?fmt12(next.time):next.time}</div>
-		<div class="prayer-mosque-countdown">${formatCountdown(diffMins)}</div>`;
+	if (next) {
+		const diffMins = Math.max(0, Math.round(next.mins - nowMins));
+		const hDate = hijriStr();
+		const hero = document.createElement('div');
+		hero.className = 'prayer-mosque-hero';
+		safeHTML(hero, `
+			<div class="prayer-mosque-crescent">☽</div>
+			${hDate ? `<div class="prayer-mosque-hijri">${hDate}</div>` : ''}
+			<div class="prayer-mosque-next-label">Next Prayer</div>
+			<div class="prayer-mosque-next-name">${next.nameAr}</div>
+			<div class="prayer-mosque-next-name-en">${next.name}</div>
+			<div class="prayer-mosque-next-time">${S.clockFormat === '12h' ? fmt12(next.time) : next.time}</div>
+			<div class="prayer-mosque-countdown">${formatCountdown(diffMins)}</div>
+		`);
 		wrap.appendChild(hero);
 	}
 	
-	const row=document.createElement('div');row.className='prayer-mosque-row';
-	PRAYER_KEYS.forEach((key,i)=>{
-		const t=prayerData[key];if(!t)return;
-		const mins=timeToMins(t);const passed=mins<nowMins;const isNext=next&&next.index===i;
-		const cell=document.createElement('div');
-		cell.className='prayer-mosque-cell'+(isNext?' now':passed?' done':'');
-		cell.innerHTML=`<span class="prayer-mosque-cell-icon">${PRAYER_ICONS[i]}</span><span class="prayer-mosque-cell-name">${PRAYER_NAMES[i]}</span><span class="prayer-mosque-cell-time">${(prayerData[key]||'').slice(0,5)}</span>`;
+	const row = document.createElement('div');
+	row.className = 'prayer-mosque-row';
+	PRAYER_KEYS.forEach((key, i) => {
+		const t = prayerData[key]; if (!t) return;
+		const mins = timeToMins(t); const passed = mins < nowMins; const isNext = next && next.index === i;
+		const cell = document.createElement('div');
+		cell.className = 'prayer-mosque-cell' + (isNext ? ' now' : passed ? ' done' : '');
+		safeHTML(cell, `<span class="prayer-mosque-cell-icon">${PRAYER_ICONS[i]}</span><span class="prayer-mosque-cell-name">${PRAYER_NAMES[i]}</span><span class="prayer-mosque-cell-time">${(prayerData[key] || '').slice(0, 5)}</span>`);
 		row.appendChild(cell);
 	});
 	wrap.appendChild(row);
 }
-
 function updatePrayerCountdown(){
 	const next=getNextPrayer();if(!next)return;
 	
@@ -708,7 +731,7 @@ function applyArabicFont(){
 
 async function fetchQuote(){
 	const wrap=$('quote-wrap');if(!wrap)return;
-	wrap.innerHTML=`<div class="quote-loading">✦</div>`;
+	safeHTML(wrap,`<div class="quote-loading">✦</div>`);
 	const src=S.quoteSource||'quran';
 	if(src==='hadith'){
 		const h=HADITH_LIST[Math.floor(Math.random()*HADITH_LIST.length)];
@@ -734,7 +757,7 @@ async function fetchQuote(){
 			const h=HADITH_LIST[Math.floor(Math.random()*HADITH_LIST.length)];
 			quoteData={type:'hadith',ar:h.ar,text:h.text,source:h.source};renderQuote();
 			}else{
-			wrap.innerHTML=`<div class="quote-error" id="quote-retry">⚠ Tap to retry</div>`;
+			safeHTML(wrap,`<div class="quote-error" id="quote-retry">⚠ Tap to retry</div>`);
 			$('quote-retry')?.addEventListener('click',fetchQuote,{once:true});
 		}
 	}
@@ -787,7 +810,7 @@ function renderQuote(){
 		</div>`;
 	}
 	
-	wrap.innerHTML=html;
+	safeHTML(wrap,html);
 	$('quote-play')?.addEventListener('click',()=>toggleQuoteAudio(q.surah,q.ayah,reciter));
 	$('quote-next')?.addEventListener('click',fetchQuote);
 }
@@ -814,7 +837,7 @@ function updatePlayBtn(icon){const b=$('quote-play');if(b)b.textContent=icon;}
 
 function renderCalendar(){
 	const wrap=$('calendar-wrap');if(!wrap)return;
-	wrap.innerHTML='';
+	safeHTML(wrap,'');
 	const provider=S.calendarProvider||'google';
 	const style=S.calendarStyle||'card';
 	let src='';
@@ -835,7 +858,7 @@ function renderCalendar(){
 
 function renderLinks(){
 	const wrap=$('links-wrap');if(!wrap)return;
-	wrap.innerHTML='';
+	safeHTML(wrap,'');
 	links.forEach(link=>{
 		const a=document.createElement('a');a.className='link-item';a.href=link.url;
 		const icon=document.createElement('div');icon.className='link-icon';icon.textContent=link.emoji;
@@ -846,13 +869,13 @@ function renderLinks(){
 }
 
 async function buildGallery(){
-	const grid=$('full-gallery');if(!grid)return;grid.innerHTML='';
+	const grid=$('full-gallery');if(!grid)return;safeHTML(grid,'');
 	PRESET_GRADIENTS.forEach((p,i)=>{
 		const isAct=S.bgType==='gradient'&&S.bgGradientIndex===i;
 		const item=document.createElement('div');item.className='gal-item'+(isAct?' active':'');
 		item.style.background=p.bg;
 		const liveTag=p.anim?'<span class="gal-live">✦</span>':'';
-		item.innerHTML=`<div class="gal-check">✓</div><div class="gal-label">${p.name}${liveTag}</div>`;
+		safeHTML(item,`<div class="gal-check">✓</div><div class="gal-label">${p.name}${liveTag}</div>`);
 		item.addEventListener('click',()=>{S.bgType='gradient';S.bgGradientIndex=i;applyGradient(i);showBgLayer('gradient');buildGallery();scheduleSave();});
 		grid.appendChild(item);
 	});
@@ -861,16 +884,16 @@ async function buildGallery(){
 		const item=document.createElement('div');item.className='gal-item user-item'+(isAct?' active':'');
 		item.style.cssText='background:#1a1a2e;background-size:cover;background-position:center';
 		if(entry.thumb)item.style.backgroundImage=`url(${entry.thumb})`;
-		item.innerHTML=`<div class="gal-check">✓</div><div class="gal-label">${entry.type==='video'?'▶ Video':'🖼 Image'}</div><div class="gal-del">×</div>`;
+		safeHTML(item,`<div class="gal-check">✓</div><div class="gal-label">${entry.type==='video'?'▶ Video':'🖼 Image'}</div><div class="gal-del">×</div>`);
 		item.querySelector('.gal-del').addEventListener('click',async e=>{e.stopPropagation();await deleteUserEntry(entry);});
 		item.addEventListener('click',()=>activateUserEntry(entry));
 		grid.appendChild(item);
 	}
 	const addImg=document.createElement('div');addImg.className='gal-add';
-	addImg.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Add Image</span>`;
+	safeHTML(addImg,`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Add Image</span>`);
 	addImg.addEventListener('click',()=>$('file-image-input').click());grid.appendChild(addImg);
 	const addVid=document.createElement('div');addVid.className='gal-add';
-	addVid.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><span>Add Video</span>`;
+	safeHTML(addVid,`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><span>Add Video</span>`);
 	addVid.addEventListener('click',()=>$('file-video-input').click());grid.appendChild(addVid);
 }
 async function activateUserEntry(entry){
@@ -907,7 +930,7 @@ async function deleteUserEntry(entry){
 async function handleFileUpload(file,type){
 	if(!file)return;
 	const grid=$('full-gallery');
-	const prog=document.createElement('div');prog.className='gal-progress';prog.innerHTML='<div class="gal-prog-bar"></div><span>Processing…</span>';
+	const prog=document.createElement('div');prog.className='gal-progress';safeHTML(prog,'<div class="gal-prog-bar"></div><span>Processing…</span>');
 	if(grid)grid.prepend(prog);
 	
 	const id='user_'+Date.now(),dataKey='bg_user_'+id;
@@ -949,11 +972,11 @@ const THEMES=[
 	{id:'luxury',   label:'Luxury',   bg:'#0a080a',tCSS:'font-weight:100;letter-spacing:10px',          dCSS:'letter-spacing:7px;opacity:.4',t:'14:30',d:'MON 22 FEB'},
 ];
 function buildThemeSwatches(){
-	const grid=$('theme-grid');if(!grid)return;grid.innerHTML='';
+	const grid=$('theme-grid');if(!grid)return;safeHTML(grid,'');
 	THEMES.forEach(t=>{
 		const sw=document.createElement('div');sw.className='swatch'+(S.clockTheme===t.id?' active':'');
 		sw.style.background=t.bg;
-		sw.innerHTML=`<span class="sw-time" style="${t.tCSS}">${t.t}</span><span class="sw-date" style="${t.dCSS}">${t.d}</span><span class="sw-name">${t.label}</span>`;
+		safeHTML(sw,`<span class="sw-time" style="${t.tCSS}">${t.t}</span><span class="sw-date" style="${t.dCSS}">${t.d}</span><span class="sw-name">${t.label}</span>`);
 		sw.addEventListener('click',()=>{S.clockTheme=t.id;applyClockTheme();buildThemeSwatches();scheduleSave();});
 		grid.appendChild(sw);
 	});
@@ -966,10 +989,10 @@ const SEARCH_STYLES=[
 	{id:'minimal',label:'Minimal',html:`<div style="border-bottom:1px solid rgba(255,255,255,.3);padding:5px 4px;font-size:11px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:5px">🔍 Search…</div>`},
 ];
 function buildSearchStyleSwatches(){
-	const grid=$('search-style-grid');if(!grid)return;grid.innerHTML='';
+	const grid=$('search-style-grid');if(!grid)return;safeHTML(grid,'');
 	SEARCH_STYLES.forEach(st=>{
 		const sw=document.createElement('div');sw.className='swatch'+(S.searchStyle===st.id?' active':'');
-		sw.innerHTML=`<div class="sw-preview">${st.html}</div><span class="sw-name">${st.label}</span>`;
+		safeHTML(sw,`<div class="sw-preview">${st.html}</div><span class="sw-name">${st.label}</span>`);
 		sw.addEventListener('click',()=>{S.searchStyle=st.id;applySearchStyle();buildSearchStyleSwatches();scheduleSave();});
 		grid.appendChild(sw);
 	});
@@ -984,10 +1007,10 @@ const LINK_STYLES=[
 	{id:'frosted',label:'Frosted',html:`<div style="width:26px;height:26px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.25)">📧</div>`},
 ];
 function buildLinkStyleSwatches(){
-	const grid=$('links-style-grid');if(!grid)return;grid.innerHTML='';
+	const grid=$('links-style-grid');if(!grid)return;safeHTML(grid,'');
 	LINK_STYLES.forEach(st=>{
 		const sw=document.createElement('div');sw.className='swatch'+(S.linksStyle===st.id?' active':'');
-		sw.innerHTML=`<div class="sw-preview">${st.html}</div><span class="sw-name">${st.label}</span>`;
+		safeHTML(sw,`<div class="sw-preview">${st.html}</div><span class="sw-name">${st.label}</span>`);
 		sw.addEventListener('click',()=>{S.linksStyle=st.id;applyLinksStyle();buildLinkStyleSwatches();scheduleSave();});
 		grid.appendChild(sw);
 	});
@@ -1000,10 +1023,10 @@ const WEATHER_STYLES=[
 	{id:'forecast',label:'Forecast', html:`<div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:8px 12px;min-width:140px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:6px;opacity:.6"><span>⛅ 22°C · Partly cloudy</span></div><div style="display:flex;flex-direction:column;gap:3px"><div style="display:flex;justify-content:space-between;font-size:9px"><span>Mon</span><span>☀️</span><span style="color:rgba(255,255,255,.4)">16° 24°</span></div><div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(124,106,247,.8)"><span>Tue</span><span>🌧</span><span>13° 18°</span></div><div style="display:flex;justify-content:space-between;font-size:9px"><span>Wed</span><span>⛅</span><span style="color:rgba(255,255,255,.4)">15° 21°</span></div></div></div>`},
 ];
 function buildWeatherStyleSwatches(){
-	const grid=$('weather-style-grid');if(!grid)return;grid.innerHTML='';
+	const grid=$('weather-style-grid');if(!grid)return;safeHTML(grid,'');
 	WEATHER_STYLES.forEach(st=>{
 		const sw=document.createElement('div');sw.className='swatch'+(S.weatherStyle===st.id?' active':'');
-		sw.innerHTML=`<div class="sw-preview">${st.html}</div><span class="sw-name">${st.label}</span>`;
+		safeHTML(sw,`<div class="sw-preview">${st.html}</div><span class="sw-name">${st.label}</span>`);
 		sw.addEventListener('click',()=>{S.weatherStyle=st.id;applyWeatherStyle();buildWeatherStyleSwatches();scheduleSave();});
 		grid.appendChild(sw);
 	});
@@ -1015,10 +1038,10 @@ const SETTINGS_STYLES=[
 	{id:'dot',label:'Dot',html:`<div style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.2)"></div>`},
 ];
 function buildSettingsStyleSwatches(){
-	const grid=$('settings-style-grid');if(!grid)return;grid.innerHTML='';
+	const grid=$('settings-style-grid');if(!grid)return;safeHTML(grid,'');
 	SETTINGS_STYLES.forEach(st=>{
 		const sw=document.createElement('div');sw.className='swatch'+(S.settingsStyle===st.id?' active':'');
-		sw.innerHTML=`<div class="sw-preview">${st.html}</div><span class="sw-name">${st.label}</span>`;
+		safeHTML(sw,`<div class="sw-preview">${st.html}</div><span class="sw-name">${st.label}</span>`);
 		sw.addEventListener('click',()=>{S.settingsStyle=st.id;applySettingsStyle();buildSettingsStyleSwatches();scheduleSave();});
 		grid.appendChild(sw);
 	});
@@ -1031,17 +1054,17 @@ const PRAYER_STYLES_DEF=[
 	{id:'mosque',label:'Mosque',html:`<div style="background:linear-gradient(135deg,rgba(15,10,35,.9),rgba(30,20,60,.9));border:1px solid rgba(124,106,247,.25);border-radius:16px;padding:10px 14px;text-align:center"><div style="font-size:14px;margin-bottom:2px">☽</div><div style="font-size:9px;opacity:.4;letter-spacing:2px">NEXT</div><div style="font-size:12px;font-weight:200">العصر</div><div style="font-size:9px;color:#d4a843">15:45 · in 2h</div></div>`},
 ];
 function buildPrayerStyleSwatches(){
-	const grid=$('prayer-style-grid');if(!grid)return;grid.innerHTML='';
+	const grid=$('prayer-style-grid');if(!grid)return;safeHTML(grid,'');
 	PRAYER_STYLES_DEF.forEach(st=>{
 		const sw=document.createElement('div');sw.className='swatch'+(S.prayerStyle===st.id?' active':'');
-		sw.innerHTML=`<div class="sw-preview">${st.html}</div><span class="sw-name">${st.label}</span>`;
+		safeHTML(sw,`<div class="sw-preview">${st.html}</div><span class="sw-name">${st.label}</span>`);
 		sw.addEventListener('click',()=>{S.prayerStyle=st.id;if(prayerData)renderPrayer();buildPrayerStyleSwatches();scheduleSave();});
 		grid.appendChild(sw);
 	});
 }
 
 function buildQuoteStyleSwatches(){
-	const grid=$('quote-style-grid');if(!grid)return;grid.innerHTML='';
+	const grid=$('quote-style-grid');if(!grid)return;safeHTML(grid,'');
 	const PREVIEWS={
 		card:`<div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px 10px;max-width:130px">
 		<div style="font-size:11px;direction:rtl;color:#c9a84c;margin-bottom:4px;font-family:serif">بِسْمِ اللَّهِ</div>
@@ -1061,14 +1084,14 @@ function buildQuoteStyleSwatches(){
 	QUOTE_STYLE_DEFS.forEach(st=>{
 		const sw=document.createElement('div');
 		sw.className='swatch-wide'+(S.quoteStyle===st.id?' active':'');
-		sw.innerHTML=`<div class="sw-preview">${PREVIEWS[st.id]||''}</div><div class="sw-label">${st.name}</div>`;
+		safeHTML(sw,`<div class="sw-preview">${PREVIEWS[st.id]||''}</div><div class="sw-label">${st.name}</div>`);
 		sw.addEventListener('click',()=>{S.quoteStyle=st.id;if(quoteData)renderQuote();buildQuoteStyleSwatches();scheduleSave();});
 		grid.appendChild(sw);
 	});
 }
 
 function buildCalendarStyleSwatches(){
-	const grid=$('calendar-style-grid');if(!grid)return;grid.innerHTML='';
+	const grid=$('calendar-style-grid');if(!grid)return;safeHTML(grid,'');
 	const STYLES=[
 		{id:'card',    label:'Card',    preview:`<div style="background:rgba(10,10,22,.55);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:6px 8px;font-size:8px;color:rgba(255,255,255,.5)"><div style="color:var(--acc);margin-bottom:3px;font-size:9px">● Calendar</div><div>9:00 Fajr</div><div>14:00 Meeting</div></div>`},
 		{id:'minimal', label:'Minimal', preview:`<div style="padding:4px 0;font-size:8px;color:rgba(255,255,255,.5)"><div style="color:var(--acc);margin-bottom:3px;font-size:9px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:2px">Calendar</div><div>9:00 Fajr</div><div>14:00 Meeting</div></div>`},
@@ -1078,7 +1101,7 @@ function buildCalendarStyleSwatches(){
 	STYLES.forEach(st=>{
 		const sw=document.createElement('div');
 		sw.className='swatch-wide'+(S.calendarStyle===st.id?' active':'');
-		sw.innerHTML=`<div class="sw-preview">${st.preview}</div><div class="sw-label">${st.label}</div>`;
+		safeHTML(sw,`<div class="sw-preview">${st.preview}</div><div class="sw-label">${st.label}</div>`);
 		sw.addEventListener('click',()=>{S.calendarStyle=st.id;if(S.calendarVisible)renderCalendar();buildCalendarStyleSwatches();scheduleSave();});
 		grid.appendChild(sw);
 	});
@@ -1107,7 +1130,7 @@ function syncForm(){
 
 function buildPositionGrids(){
 	['clockPosition','searchPosition','linksPosition','weatherPosition','prayerPosition','quotePosition','calendarPosition'].forEach(key=>{
-		const grid=$('grid-'+key);if(!grid)return;grid.innerHTML='';
+		const grid=$('grid-'+key);if(!grid)return;safeHTML(grid,'');
 		POSITIONS_ORDER.forEach(pos=>{
 			const cell=document.createElement('div');cell.className='pos-cell'+(S[key]===pos?' sel':'');
 			const dot=document.createElement('div');dot.className='pos-dot';cell.appendChild(dot);cell.title=pos.replace(/-/g,' ');
@@ -1147,7 +1170,7 @@ function scheduleSave(){
 function openLinksModal(){tempLinks=links.map(l=>({...l}));renderLinksEditor();$('links-modal').classList.add('open');}
 function closeLinksModal(){$('links-modal').classList.remove('open');}
 function renderLinksEditor(){
-	const ed=$('links-editor');if(!ed)return;ed.innerHTML='';
+	const ed=$('links-editor');if(!ed)return;safeHTML(ed,'');
 	tempLinks.forEach((link,i)=>{
 		const row=document.createElement('div');row.className='link-row';
 		const ei=document.createElement('input');ei.type='text';ei.className='ie';ei.placeholder='😀';ei.value=link.emoji;ei.addEventListener('input',()=>{tempLinks[i].emoji=ei.value;});
@@ -1248,16 +1271,12 @@ async function init(){
 		const ctx = canvas.getContext('2d');
 		particles = [];
 		gridPoints = [];
-		
-		// Setup Particles for Constellation, Swarm, or Kinetic Mesh
+
 		if (mode === 'constellation' || mode === 'swarm' || mode === 'mesh') {
 			let count = Math.floor((canvas.width * canvas.height) / 12000);
 			if (mode === 'swarm') count = 110;
 			if (mode === 'mesh') count = Math.floor((canvas.width * canvas.height) / 14000);
-			
-			// Force a minimum count so it never fails on startup
 			count = Math.max(count, 50);
-			
 			for (let i = 0; i < count; i++) {
 				particles.push({
 					x: Math.random() * canvas.width,
@@ -1265,34 +1284,94 @@ async function init(){
 					vx: (Math.random() - 0.5) * (mode === 'swarm' ? 1.5 : 0.8),
 					vy: (Math.random() - 0.5) * (mode === 'swarm' ? 1.5 : 0.8),
 					radius: mode === 'mesh' ? 1.5 : (Math.random() * 2 + 1),
-					color: mode === 'swarm' 
-					? `hsl(${Math.random() * 60 + 230}, 80%, 65%)` 
-					: 'rgba(180, 200, 255, 0.7)'
+					color: mode === 'swarm'
+						? `hsl(${Math.random() * 60 + 230}, 80%, 65%)`
+						: 'rgba(180, 200, 255, 0.7)'
 				});
 			}
 		}
-		
-		// Setup Grid Points for Gravity or Vector Field
+
 		if (mode === 'gravity' || mode === 'field') {
 			const spacing = mode === 'field' ? 32 : 35;
 			const cols = Math.ceil(canvas.width / spacing) + 1;
 			const rows = Math.ceil(canvas.height / spacing) + 1;
 			for (let i = 0; i < cols; i++) {
 				for (let j = 0; j < rows; j++) {
-					gridPoints.push({
-						baseX: i * spacing,
-						baseY: j * spacing,
-						x: i * spacing,
-						y: j * spacing
-					});
+					gridPoints.push({ baseX: i * spacing, baseY: j * spacing, x: i * spacing, y: j * spacing });
 				}
+			}
+		}
+
+		if (mode === 'liquid') {
+			const count = Math.max(6, Math.floor((canvas.width * canvas.height) / 80000));
+			for (let i = 0; i < count; i++) {
+				particles.push({
+					x: Math.random() * canvas.width,
+					y: Math.random() * canvas.height,
+					vx: (Math.random() - 0.5) * 0.6,
+					vy: (Math.random() - 0.5) * 0.6,
+					r: 80 + Math.random() * 120,
+					hue: 220 + Math.random() * 100,
+					phase: Math.random() * Math.PI * 2,
+				});
+			}
+		}
+
+		if (mode === 'curtain') {
+			const cols = Math.ceil(canvas.width / 18);
+			for (let i = 0; i < cols; i++) {
+				gridPoints.push({
+					x: i * 18 + 9,
+					phase: Math.random() * Math.PI * 2,
+					speed: 0.004 + Math.random() * 0.006,
+					amp: 18 + Math.random() * 32,
+					hue: 180 + Math.random() * 160,
+					ripple: 0,
+					rippleY: 0,
+				});
+			}
+		}
+
+		if (mode === 'neonrain') {
+			const count = Math.max(60, Math.floor(canvas.width / 14));
+			for (let i = 0; i < count; i++) {
+				particles.push({
+					x: Math.random() * canvas.width,
+					y: Math.random() * canvas.height - canvas.height,
+					speed: 3 + Math.random() * 5,
+					len: 20 + Math.random() * 60,
+					hue: Math.random() < 0.6 ? 270 + Math.random() * 30 : 180 + Math.random() * 20,
+					alpha: 0.3 + Math.random() * 0.6,
+					drift: 0,
+				});
+			}
+		}
+
+		if (mode === 'sand') {
+			const count = Math.max(800, Math.floor((canvas.width * canvas.height) / 1800));
+			for (let i = 0; i < count; i++) {
+				particles.push({
+					x: Math.random() * canvas.width,
+					y: Math.random() * canvas.height,
+					vx: 0,
+					vy: 0,
+					baseVx: (Math.random() - 0.5) * 0.3,
+					radius: 0.8 + Math.random() * 1.2,
+					hue: 35 + Math.random() * 25,
+					alpha: 0.3 + Math.random() * 0.5,
+				});
 			}
 		}
 		
 		function loop() {
 			if (!activeInteractiveMode) return;
-			
-			ctx.fillStyle = '#05050a';
+
+			const bgColors = {
+				constellation:'#05050a', gravity:'#04040a', swarm:'#04040c',
+				field:'#04040a', mesh:'#05050a',
+				liquid:'#03030a', curtain:'#010108', neonrain:'#02020c', sand:'#05040e',
+			};
+			ctx.fillStyle = bgColors[mode] || '#05050a';
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 			
 			// ==========================================
@@ -1495,140 +1574,343 @@ async function init(){
 				}
 			}
 			
-			mouse.vx *= 0.5; mouse.vy *= 0.5;
-			bgAnimFrame = requestAnimationFrame(loop);
-		}
-		
-		loop();
-	}
-	
-	document.addEventListener('visibilitychange',()=>{
-		if(document.hidden){
-			clearTimeout(favAnimFrame);favAnimFrame=null;
-			clearInterval(clockTimer);clockTimer=null;
-			stopQuoteAudio();
-			if(bgAnimFrame){cancelAnimationFrame(bgAnimFrame);bgAnimFrame=null;}
-			}else{
-			if(!favAnimFrame)animateFavicon();
-			startClock();
-			if(activeInteractiveMode){
-				const canvas=$('bg-canvas');
-				if(canvas)startInteractiveCanvas(canvas,activeInteractiveMode);
+			// ==========================================
+			// 6. LIQUID METAL
+			// ==========================================
+			else if (mode === 'liquid') {
+				const t = performance.now() * 0.001;
+				particles.forEach(p => {
+					p.phase += 0.008;
+					p.x += p.vx + Math.sin(p.phase * 0.7) * 0.4;
+					p.y += p.vy + Math.cos(p.phase * 0.5) * 0.4;
+					if (p.x < -p.r) p.x = canvas.width + p.r;
+					if (p.x > canvas.width + p.r) p.x = -p.r;
+					if (p.y < -p.r) p.y = canvas.height + p.r;
+					if (p.y > canvas.height + p.r) p.y = -p.r;
+
+					if (mouse.x > 0) {
+						const dx = mouse.x - p.x, dy = mouse.y - p.y;
+						const dist = Math.hypot(dx, dy);
+						if (dist < 260) {
+							const f = (1 - dist / 260) * 0.018;
+							p.vx += dx * f; p.vy += dy * f;
+						}
+					}
+					p.vx *= 0.96; p.vy *= 0.96;
+
+					const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+					grd.addColorStop(0,   `hsla(${p.hue}, 70%, 75%, 0.18)`);
+					grd.addColorStop(0.4, `hsla(${p.hue + 30}, 80%, 55%, 0.10)`);
+					grd.addColorStop(1,   `hsla(${p.hue + 60}, 60%, 30%, 0)`);
+					ctx.fillStyle = grd;
+					ctx.beginPath();
+					ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+					ctx.fill();
+				});
+
+				for (let i = 0; i < particles.length; i++) {
+					for (let j = i + 1; j < particles.length; j++) {
+						const a = particles[i], b = particles[j];
+						const dx = b.x - a.x, dy = b.y - a.y;
+						const dist = Math.hypot(dx, dy);
+						const bridge = (a.r + b.r) * 0.75;
+						if (dist < bridge) {
+							const alpha = (1 - dist / bridge) * 0.35;
+							const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+							const g = ctx.createRadialGradient(mx, my, 0, mx, my, bridge * 0.5);
+							g.addColorStop(0, `hsla(${(a.hue + b.hue) / 2}, 75%, 65%, ${alpha})`);
+							g.addColorStop(1, `hsla(${(a.hue + b.hue) / 2}, 60%, 40%, 0)`);
+							ctx.fillStyle = g;
+							ctx.beginPath();
+							ctx.arc(mx, my, bridge * 0.5, 0, Math.PI * 2);
+							ctx.fill();
+						}
+					}
+				}
 			}
-		}
-	});
-	
-	$('quoteVisible')?.addEventListener('change',()=>{
-		collectForm();applyVisibility();
-		if(S.quoteVisible&&!quoteData)fetchQuote();
-		scheduleSave();
-	});
-	$('quoteSource')?.addEventListener('change',()=>{collectForm();quoteData=null;if(S.quoteVisible)fetchQuote();scheduleSave();});
-	$('quoteStyle')?.addEventListener('change',()=>{collectForm();if(quoteData)renderQuote();scheduleSave();});
-	$('arabicFont')?.addEventListener('change',()=>{collectForm();applyArabicFont();if(quoteData)renderQuote();scheduleSave();});
-	$('quranReciter')?.addEventListener('change',()=>{collectForm();stopQuoteAudio();if(quoteData?.type==='quran')renderQuote();scheduleSave();});
-	$('calendarVisible')?.addEventListener('change',()=>{
-		collectForm();applyVisibility();
-		if(S.calendarVisible)renderCalendar();
-		scheduleSave();
-	});
-	$('calendarProvider')?.addEventListener('change',()=>{collectForm();if(S.calendarVisible)renderCalendar();scheduleSave();});
-	$('calendarStyle')?.addEventListener('change',()=>{collectForm();if(S.calendarVisible)renderCalendar();scheduleSave();});
-	
-	if(S.weatherVisible)fetchWeather();
-	if(S.prayerVisible)fetchPrayerTimes();
-	if(S.quoteVisible)fetchQuote();
-	else applyArabicFont();
-	if(S.calendarVisible)renderCalendar();
-	
-	requestAnimationFrame(()=>{const l=$('loader');if(l){l.classList.add('done');setTimeout(()=>l.remove(),1100);}});
-	
-	const onboarded=await storageGet('onboarded');
-	if(!onboarded)setTimeout(showOnboarding,900);
-	
-	['mousemove','keydown','mousedown','touchstart'].forEach(ev=>{
-		document.addEventListener(ev,()=>{if(S.autoFade)resetFadeTimer();},{passive:true});
-	});
-	
-	$('ob-next').addEventListener('click',()=>{if(obStep<OB_STEPS.length-1){obStep++;renderObStep();}else hideOnboarding();});
-	$('ob-skip').addEventListener('click',hideOnboarding);
-	$('show-ob-btn')?.addEventListener('click',()=>{closePanel();setTimeout(showOnboarding,300);});
-	
-	$('settings-btn').addEventListener('click',()=>{
-		if(document.body.classList.contains('panel-open'))closePanel();
-		else openPanel();
-	});
-	$('panel-close').addEventListener('click',closePanel);
-	document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
-	
-	document.querySelectorAll('.p-tab').forEach(tab=>{
-		tab.addEventListener('click',()=>{
-			document.querySelectorAll('.p-tab').forEach(t=>t.classList.remove('active'));
-			document.querySelectorAll('.p-page').forEach(p=>p.classList.remove('active'));
-			tab.classList.add('active');$('tab-'+tab.dataset.tab)?.classList.add('active');
-		});
-	});
-	
-	function onChange(){collectForm();applyAll();scheduleSave();}
-	['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','autoFade'].forEach(k=>$(k)?.addEventListener('change',onChange));
-	['clockFormat','clockSize','searchEngine','videoSpeed','linksSize'].forEach(k=>$(k)?.addEventListener('change',onChange));
-	$('greetingName')?.addEventListener('input',onChange);
-	
-	$('weatherVisible')?.addEventListener('change',()=>{
-		collectForm();applyAll();
-		if(S.weatherVisible&&weatherCelsius===null)fetchWeather();
-		scheduleSave();
-	});
-	$('weatherUnit')?.addEventListener('change',()=>{collectForm();renderWeatherTemp();scheduleSave();});
-	
-	$('prayerVisible')?.addEventListener('change',()=>{
-		collectForm();applyVisibility();
-		if(S.prayerVisible&&!prayerData)fetchPrayerTimes();
-		scheduleSave();
-	});
-	$('prayerMethod')?.addEventListener('change',()=>{
-		collectForm();prayerData=null;if(S.prayerVisible)fetchPrayerTimes();scheduleSave();
-	});
-	
-	const dimSl=$('videoDim'),dimVl=$('videoDim-val');
-	dimSl?.addEventListener('input',()=>{S.videoDim=parseInt(dimSl.value);if(dimVl)dimVl.textContent=dimSl.value+'%';applyVideoDim();scheduleSave();});
-	const fdSl=$('autoFadeDelay'),fdVl=$('autoFadeDelay-val');
-	fdSl?.addEventListener('input',()=>{S.autoFadeDelay=parseInt(fdSl.value);if(fdVl)fdVl.textContent=fdSl.value+'s';if(S.autoFade)resetFadeTimer();scheduleSave();});
-	
-	$('file-image-input').addEventListener('change',e=>{handleFileUpload(e.target.files[0],'image');e.target.value='';});
-	$('file-video-input').addEventListener('change',e=>{handleFileUpload(e.target.files[0],'video');e.target.value='';});
-	
-	$('sound-btn').addEventListener('click',()=>{const v=$('bg-video');if(!v)return;v.muted=!v.muted;S.videoMuted=v.muted;updateSoundBtn();scheduleSave();});
-	
-	$('open-links-modal-btn').addEventListener('click',openLinksModal);
-	$('lm-cancel').addEventListener('click',closeLinksModal);
-	$('links-modal').addEventListener('click',e=>{if(e.target===$('links-modal'))closeLinksModal();});
-	$('add-link-btn').addEventListener('click',()=>{tempLinks.push({emoji:'🔗',label:'New Link',url:'https://'});renderLinksEditor();});
-	$('lm-save').addEventListener('click',async()=>{links=tempLinks.filter(l=>l.url.trim()&&l.url!=='https://');await storageSet('quick_links',links);renderLinks();closeLinksModal();});
-	
-	$('r-settings').addEventListener('click',async()=>{if(!confirm('Reset all settings?'))return;S={...DEFAULT_SETTINGS};await storageSet('settings',S);placeAllWidgets();applyAll();syncForm();});
-	$('r-bg').addEventListener('click',async()=>{
-		if(!confirm('Reset background?'))return;
-		if(S.bgActiveKey&&_blobCache[S.bgActiveKey]){URL.revokeObjectURL(_blobCache[S.bgActiveKey]);delete _blobCache[S.bgActiveKey];}
-		S.bgType='gradient';S.bgGradientIndex=0;S.bgActiveKey=null;
-		applyGradient(0);showBgLayer('gradient');buildGallery();scheduleSave();
-	});
-	$('r-links').addEventListener('click',async()=>{if(!confirm('Restore default links?'))return;links=[...DEFAULT_LINKS];await storageSet('quick_links',links);renderLinks();});
-	$('r-all').addEventListener('click',async()=>{
-		if(!confirm('Wipe ALL data?'))return;
-		await chrome.storage.local.clear();
-		await idbClear();
-		Object.values(_blobCache).forEach(u=>URL.revokeObjectURL(u));
-		Object.keys(_blobCache).forEach(k=>delete _blobCache[k]);
-		S={...DEFAULT_SETTINGS};links=[...DEFAULT_LINKS];userGallery=[];
-		prayerData=null;prayerHijri=null;prayerDateStr=null;_lastNextPrayerIndex=-1;forecastData=null;quoteData=null;stopQuoteAudio();
-		placeAllWidgets();applyAll();renderLinks();syncForm();
-		applyGradient(0);showBgLayer('gradient');
-		const img=$('bg-image'),vid=$('bg-video');
-		if(img){img.src='';img.classList.remove('loaded');}
-		if(vid){vid.src='';vid.classList.remove('loaded');}
-		buildGallery();
-	});
-}
+
+			// ==========================================
+			// 7. AURORA CURTAIN
+			// ==========================================
+			else if (mode === 'curtain') {
+				const t = performance.now() * 0.001;
+				const H = canvas.height;
+
+				gridPoints.forEach(col => {
+					col.phase += col.speed;
+
+					if (mouse.x > 0) {
+						const dx = mouse.x - col.x;
+						if (Math.abs(dx) < 120) {
+							col.ripple = (1 - Math.abs(dx) / 120) * 3.0;
+							col.rippleY = mouse.y;
+						}
+					}
+					col.ripple *= 0.93;
+
+					const segments = 60;
+					const segH = H / segments;
+
+					for (let s = 0; s < segments; s++) {
+						const yTop = s * segH;
+						const yBot = yTop + segH + 1;
+						const progress = s / segments;
+
+						const wave = Math.sin(col.phase + progress * 4.5) * col.amp;
+						const rippleWave = col.rippleY > 0
+							? Math.sin((yTop - col.rippleY) * 0.03 + t * 4) * col.ripple * 12 * (1 - Math.abs(yTop - col.rippleY) / H)
+							: 0;
+
+						const xOffset = wave + rippleWave;
+						const nextProgress = (s + 1) / segments;
+						const nextWave = Math.sin(col.phase + nextProgress * 4.5) * col.amp;
+						const nextRipple = col.rippleY > 0
+							? Math.sin((yBot - col.rippleY) * 0.03 + t * 4) * col.ripple * 12 * (1 - Math.abs(yBot - col.rippleY) / H)
+							: 0;
+						const xOffsetNext = nextWave + nextRipple;
+
+						const brightness = 0.35 + Math.sin(col.phase + progress * 3) * 0.2;
+						const alpha = brightness * (0.4 + Math.sin(col.phase * 1.3 + progress * 2) * 0.25);
+						const hShift = Math.sin(col.phase * 0.5 + progress) * 40;
+
+						ctx.strokeStyle = `hsla(${col.hue + hShift}, 85%, 65%, ${Math.max(0, alpha)})`;
+						ctx.lineWidth = 10;
+						ctx.lineCap = 'round';
+						ctx.beginPath();
+						ctx.moveTo(col.x + xOffset, yTop);
+						ctx.lineTo(col.x + xOffsetNext, yBot);
+						ctx.stroke();
+					}
+				});
+			}
+
+			// ==========================================
+			// 8. NEON RAIN
+			// ==========================================
+			else if (mode === 'neonrain') {
+				particles.forEach(p => {
+					if (mouse.x > 0) {
+						const dx = mouse.x - p.x;
+						const dy = mouse.y - p.y;
+						const dist = Math.hypot(dx, dy);
+						if (dist < 200) {
+							const push = (1 - dist / 200) * 3.5;
+							p.drift += (-dx / dist) * push * 0.4;
+						}
+					}
+					p.drift *= 0.92;
+					p.x += p.drift;
+					p.y += p.speed;
+
+					if (p.y > canvas.height + p.len) {
+						p.y = -p.len - Math.random() * 100;
+						p.x = Math.random() * canvas.width;
+						p.drift = 0;
+					}
+					if (p.x < -10) p.x = canvas.width + 10;
+					if (p.x > canvas.width + 10) p.x = -10;
+
+					const grd = ctx.createLinearGradient(p.x, p.y - p.len, p.x, p.y);
+					grd.addColorStop(0, `hsla(${p.hue}, 100%, 65%, 0)`);
+					grd.addColorStop(0.7, `hsla(${p.hue}, 100%, 70%, ${p.alpha * 0.6})`);
+					grd.addColorStop(1,   `hsla(${p.hue}, 100%, 85%, ${p.alpha})`);
+					ctx.strokeStyle = grd;
+					ctx.lineWidth = 1.5;
+					ctx.lineCap = 'round';
+					ctx.shadowColor = `hsl(${p.hue}, 100%, 65%)`;
+					ctx.shadowBlur = 6;
+					ctx.beginPath();
+					ctx.moveTo(p.x, p.y - p.len);
+					ctx.lineTo(p.x, p.y);
+					ctx.stroke();
+					ctx.shadowBlur = 0;
+
+					if (Math.random() < 0.004) {
+						ctx.fillStyle = `hsla(${p.hue}, 100%, 90%, ${p.alpha})`;
+						ctx.beginPath();
+						ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+						ctx.fill();
+					}
+				});
+			}
+// ==========================================
+							// 9. SAND DUNES
+							// ==========================================
+							else if (mode === 'sand') {
+								const t = performance.now() * 0.0004;
+								particles.forEach(p => {
+									const windX = Math.sin(t + p.y * 0.004) * 0.5 + 0.3;
+									const windY = Math.cos(t * 0.7 + p.x * 0.003) * 0.15;
+									
+									if (mouse.x > 0) {
+										const dx = p.x - mouse.x, dy = p.y - mouse.y;
+										const dist = Math.hypot(dx, dy);
+										if (dist < 180) {
+											const blast = (1 - dist / 180) * 5;
+											p.vx += (dx / dist) * blast;
+											p.vy += (dy / dist) * blast;
+										}
+									}
+									
+									p.vx = p.vx * 0.88 + (windX + p.baseVx) * 0.12;
+									p.vy = p.vy * 0.88 + windY * 0.12;
+									p.x += p.vx;
+									p.y += p.vy;
+									
+									if (p.x < 0) p.x = canvas.width;
+									if (p.x > canvas.width) p.x = 0;
+									if (p.y < 0) p.y = canvas.height;
+									if (p.y > canvas.height) p.y = 0;
+									
+									const speedMag = Math.hypot(p.vx, p.vy);
+									const lit = Math.min(1, speedMag * 0.4);
+									ctx.fillStyle = `hsla(${p.hue}, 40%, ${30 + lit * 40}%, ${p.alpha})`;
+									ctx.beginPath();
+									ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+									ctx.fill();
+								});
+							}
+							
+							mouse.vx *= 0.5; mouse.vy *= 0.5;
+							bgAnimFrame = requestAnimationFrame(loop);
+						} // <--- CORRECTLY CLOSES loop()
+						
+						loop(); // <--- STARTS THE LOOP
+					} // <--- CORRECTLY CLOSES initInteractiveCanvas()
+					
+					// ==========================================
+					// REST OF EXTENSION INIT()
+					// ==========================================
+					
+					document.addEventListener('visibilitychange',()=>{
+						if(document.hidden){
+							clearTimeout(favAnimFrame);favAnimFrame=null;
+							clearInterval(clockTimer);clockTimer=null;
+							stopQuoteAudio();
+							if(bgAnimFrame){cancelAnimationFrame(bgAnimFrame);bgAnimFrame=null;}
+						}else{
+							if(!favAnimFrame)animateFavicon();
+							startClock();
+							if(activeInteractiveMode){
+								const canvas=$('bg-canvas');
+								if(canvas)startInteractiveCanvas(canvas,activeInteractiveMode);
+							}
+						}
+					});
+					
+					$('quoteVisible')?.addEventListener('change',()=>{
+						collectForm();applyVisibility();
+						if(S.quoteVisible&&!quoteData)fetchQuote();
+						scheduleSave();
+					});
+					$('quoteSource')?.addEventListener('change',()=>{collectForm();quoteData=null;if(S.quoteVisible)fetchQuote();scheduleSave();});
+					$('quoteStyle')?.addEventListener('change',()=>{collectForm();if(quoteData)renderQuote();scheduleSave();});
+					$('arabicFont')?.addEventListener('change',()=>{collectForm();applyArabicFont();if(quoteData)renderQuote();scheduleSave();});
+					$('quranReciter')?.addEventListener('change',()=>{collectForm();stopQuoteAudio();if(quoteData?.type==='quran')renderQuote();scheduleSave();});
+					$('calendarVisible')?.addEventListener('change',()=>{
+						collectForm();applyVisibility();
+						if(S.calendarVisible)renderCalendar();
+						scheduleSave();
+					});
+					$('calendarProvider')?.addEventListener('change',()=>{collectForm();if(S.calendarVisible)renderCalendar();scheduleSave();});
+					$('calendarStyle')?.addEventListener('change',()=>{collectForm();if(S.calendarVisible)renderCalendar();scheduleSave();});
+					
+					if(S.weatherVisible)fetchWeather();
+					if(S.prayerVisible)fetchPrayerTimes();
+					if(S.quoteVisible)fetchQuote();
+					else applyArabicFont();
+					if(S.calendarVisible)renderCalendar();
+					
+					requestAnimationFrame(()=>{const l=$('loader');if(l){l.classList.add('done');setTimeout(()=>l.remove(),1100);}});
+					
+					// Await is now safely back in the top level of the async init() function!
+					const onboarded=await storageGet('onboarded');
+					if(!onboarded)setTimeout(showOnboarding,900);
+					
+					['mousemove','keydown','mousedown','touchstart'].forEach(ev=>{
+						document.addEventListener(ev,()=>{if(S.autoFade)resetFadeTimer();},{passive:true});
+					});
+					
+					$('ob-next').addEventListener('click',()=>{if(obStep<OB_STEPS.length-1){obStep++;renderObStep();}else hideOnboarding();});
+					$('ob-skip').addEventListener('click',hideOnboarding);
+					$('show-ob-btn')?.addEventListener('click',()=>{closePanel();setTimeout(showOnboarding,300);});
+					
+					$('settings-btn').addEventListener('click',()=>{
+						if(document.body.classList.contains('panel-open'))closePanel();
+						else openPanel();
+					});
+					$('panel-close').addEventListener('click',closePanel);
+					document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
+					
+					document.querySelectorAll('.p-tab').forEach(tab=>{
+						tab.addEventListener('click',()=>{
+							document.querySelectorAll('.p-tab').forEach(t=>t.classList.remove('active'));
+							document.querySelectorAll('.p-page').forEach(p=>p.classList.remove('active'));
+							tab.classList.add('active');$('tab-'+tab.dataset.tab)?.classList.add('active');
+						});
+					});
+					
+					function onChange(){collectForm();applyAll();scheduleSave();}
+					['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','autoFade'].forEach(k=>$(k)?.addEventListener('change',onChange));
+					['clockFormat','clockSize','searchEngine','videoSpeed','linksSize'].forEach(k=>$(k)?.addEventListener('change',onChange));
+					$('greetingName')?.addEventListener('input',onChange);
+					
+					$('weatherVisible')?.addEventListener('change',()=>{
+						collectForm();applyAll();
+						if(S.weatherVisible&&weatherCelsius===null)fetchWeather();
+						scheduleSave();
+					});
+					$('weatherUnit')?.addEventListener('change',()=>{collectForm();renderWeatherTemp();scheduleSave();});
+					
+					$('prayerVisible')?.addEventListener('change',()=>{
+						collectForm();applyVisibility();
+						if(S.prayerVisible&&!prayerData)fetchPrayerTimes();
+						scheduleSave();
+					});
+					$('prayerMethod')?.addEventListener('change',()=>{
+						collectForm();prayerData=null;if(S.prayerVisible)fetchPrayerTimes();scheduleSave();
+					});
+					
+					const dimSl=$('videoDim'),dimVl=$('videoDim-val');
+					dimSl?.addEventListener('input',()=>{S.videoDim=parseInt(dimSl.value);if(dimVl)dimVl.textContent=dimSl.value+'%';applyVideoDim();scheduleSave();});
+					const fdSl=$('autoFadeDelay'),fdVl=$('autoFadeDelay-val');
+					fdSl?.addEventListener('input',()=>{S.autoFadeDelay=parseInt(fdSl.value);if(fdVl)fdVl.textContent=fdSl.value+'s';if(S.autoFade)resetFadeTimer();scheduleSave();});
+					
+					$('file-image-input').addEventListener('change',e=>{handleFileUpload(e.target.files[0],'image');e.target.value='';});
+					$('file-video-input').addEventListener('change',e=>{handleFileUpload(e.target.files[0],'video');e.target.value='';});
+					
+					$('sound-btn').addEventListener('click',()=>{const v=$('bg-video');if(!v)return;v.muted=!v.muted;S.videoMuted=v.muted;updateSoundBtn();scheduleSave();});
+					
+					$('open-links-modal-btn').addEventListener('click',openLinksModal);
+					$('lm-cancel').addEventListener('click',closeLinksModal);
+					$('links-modal').addEventListener('click',e=>{if(e.target===$('links-modal'))closeLinksModal();});
+					$('add-link-btn').addEventListener('click',()=>{tempLinks.push({emoji:'🔗',label:'New Link',url:'https://'});renderLinksEditor();});
+					$('lm-save').addEventListener('click',async()=>{links=tempLinks.filter(l=>l.url.trim()&&l.url!=='https://');await storageSet('quick_links',links);renderLinks();closeLinksModal();});
+					
+					$('r-settings').addEventListener('click',async()=>{if(!confirm('Reset all settings?'))return;S={...DEFAULT_SETTINGS};await storageSet('settings',S);placeAllWidgets();applyAll();syncForm();});
+					$('r-bg').addEventListener('click',async()=>{
+						if(!confirm('Reset background?'))return;
+						if(S.bgActiveKey&&_blobCache[S.bgActiveKey]){URL.revokeObjectURL(_blobCache[S.bgActiveKey]);delete _blobCache[S.bgActiveKey];}
+						S.bgType='gradient';S.bgGradientIndex=0;S.bgActiveKey=null;
+						applyGradient(0);showBgLayer('gradient');buildGallery();scheduleSave();
+					});
+					$('r-links').addEventListener('click',async()=>{if(!confirm('Restore default links?'))return;links=[...DEFAULT_LINKS];await storageSet('quick_links',links);renderLinks();});
+					$('r-all').addEventListener('click',async()=>{
+						if(!confirm('Wipe ALL data?'))return;
+						await chrome.storage.local.clear();
+						await idbClear();
+						Object.values(_blobCache).forEach(u=>URL.revokeObjectURL(u));
+						Object.keys(_blobCache).forEach(k=>delete _blobCache[k]);
+						S={...DEFAULT_SETTINGS};links=[...DEFAULT_LINKS];userGallery=[];
+						prayerData=null;prayerHijri=null;prayerDateStr=null;_lastNextPrayerIndex=-1;forecastData=null;quoteData=null;stopQuoteAudio();
+						placeAllWidgets();applyAll();renderLinks();syncForm();
+						applyGradient(0);showBgLayer('gradient');
+						const img=$('bg-image'),vid=$('bg-video');
+						if(img){img.src='';img.classList.remove('loaded');}
+						if(vid){vid.src='';vid.classList.remove('loaded');}
+						buildGallery();
+					});
+				} // <--- CORRECTLY CLOSES init()
 
 document.addEventListener('DOMContentLoaded',init);
+
