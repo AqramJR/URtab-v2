@@ -3,7 +3,16 @@
 # UrTab
 
 **A Muslim-friendly Chrome, Firefox & Edge new tab — prayer times, Quran & Hadith with audio, live weather, interactive backgrounds, and six clock themes. Zero dependencies, no account required.**
-(.assets/hero.gif)
+
+<img width="1280" height="631" alt="Main" src="https://github.com/user-attachments/assets/0b62ec41-3d36-4335-a811-5f5146cc9231" />
+
+
+
+
+
+
+
+
 ![Version](https://img.shields.io/badge/version-2.2-7c6af7?style=flat-square)
 ![Manifest](https://img.shields.io/badge/manifest-v3-5edf82?style=flat-square)
 ![Chrome](https://img.shields.io/badge/Chrome-✓-4285F4?style=flat-square)
@@ -91,6 +100,15 @@ via Firefox add-ons (under-review)
 ---
 
 ## Screenshots
+https://github.com/user-attachments/assets/55174dfd-2ce8-4ae8-8aeb-3f645810ed57
+
+<img width="286" height="268" alt="weather" src="https://github.com/user-attachments/assets/ebcd46b4-3847-4873-a22a-5891336094ec" />
+<img width="459" height="891" alt="sWeather" src="https://github.com/user-attachments/assets/22de0057-55a8-45b8-825a-c11b7532e813" />
+<img width="461" height="875" alt="Search" src="https://github.com/user-attachments/assets/a12ac759-b0c9-4e4e-8a1c-4aceeaa17c61" />
+<img width="452" height="794" alt="Quote" src="https://github.com/user-attachments/assets/fa8ca091-2ca0-4957-9859-66723440efff" />
+<img width="464" height="863" alt="Prayer" src="https://github.com/user-attachments/assets/2e8bd84f-c807-4101-808a-eee2112fcfdd" />
+<img width="464" height="896" alt="Clock" src="https://github.com/user-attachments/assets/eaafa45f-e2f8-48c2-a656-29bd68fa862f" />
+<img width="454" height="913" alt="background" src="https://github.com/user-attachments/assets/02333e8b-248a-4257-baec-714effc7314e" />
 
 
 
