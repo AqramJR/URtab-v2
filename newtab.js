@@ -25,14 +25,15 @@ let S={}, links=[], tempLinks=[], clockTimer=null, saveTimer=null, saveToastTime
 let fadeTimer=null, weatherCelsius=null, forecastData=null, isMoving=false, userGallery=[];
 let prayerData=null, prayerDateStr=null, prayerHijri=null, favAnimFrame=null;
 let _lastNextPrayerIndex=-1, quoteData=null, quoteAudio=null, quoteAudioPlaying=false;
+let sportsTimer=null;
 const _blobCache={};
 
-const WIDGET_IDS=['clock-wrap','weather-wrap','search-wrap','links-wrap','prayer-wrap','quote-wrap','calendar-wrap'];
+const WIDGET_IDS=['clock-wrap','weather-wrap','search-wrap','links-wrap','prayer-wrap','quote-wrap','calendar-wrap','sports-wrap'];
 const WIDGET_KEY={
 	'clock-wrap':'clockPosition','weather-wrap':'weatherPosition',
 	'search-wrap':'searchPosition','links-wrap':'linksPosition',
 	'prayer-wrap':'prayerPosition','quote-wrap':'quotePosition',
-	'calendar-wrap':'calendarPosition',
+	'calendar-wrap':'calendarPosition','sports-wrap':'sportsPosition'
 };
 function $(id){return document.getElementById(id);}
 
@@ -290,16 +291,17 @@ function setVisible(id,show){
 		}else{
 		el.style.opacity='0';el.style.transform='translateY(8px) scale(0.97)';el.style.pointerEvents='none';
 		setTimeout(()=>{
-			const still=(id==='clock-wrap'&&!S.clockVisible)||(id==='search-wrap'&&!S.searchVisible)||(id==='links-wrap'&&!S.linksVisible)||(id==='weather-wrap'&&!S.weatherVisible)||(id==='prayer-wrap'&&!S.prayerVisible)||(id==='quote-wrap'&&!S.quoteVisible)||(id==='calendar-wrap'&&!S.calendarVisible);
+			const still=(id==='clock-wrap'&&!S.clockVisible)||(id==='search-wrap'&&!S.searchVisible)||(id==='links-wrap'&&!S.linksVisible)||(id==='weather-wrap'&&!S.weatherVisible)||(id==='prayer-wrap'&&!S.prayerVisible)||(id==='quote-wrap'&&!S.quoteVisible)||(id==='calendar-wrap'&&!S.calendarVisible)||(id==='sports-wrap'&&!S.sportsVisible);
 			if(still)el.style.display='none';
 		},500);
 	}
 }
+
 function applyVisibility(){
 	setVisible('clock-wrap',S.clockVisible);setVisible('search-wrap',S.searchVisible);
 	setVisible('links-wrap',S.linksVisible);setVisible('weather-wrap',S.weatherVisible);
 	setVisible('prayer-wrap',S.prayerVisible);setVisible('quote-wrap',S.quoteVisible);
-	setVisible('calendar-wrap',S.calendarVisible);
+	setVisible('calendar-wrap',S.calendarVisible);setVisible('sports-wrap',S.sportsVisible);
 	$('date')?.classList.toggle('w-gone',!S.dateVisible);
 }
 
@@ -1107,20 +1109,41 @@ function buildCalendarStyleSwatches(){
 	});
 }
 
+const SPORTS_STYLES_DEF=[
+	{id:'card',label:'Card',html:`<div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;min-width:140px"><span style="font-size:16px">🔴</span><div style="text-align:center"><div style="font-size:14px;font-weight:bold;color:white">2 - 1</div><div style="font-size:8px;color:#ff3b30;font-weight:bold">LIVE</div></div><span style="font-size:16px">🔵</span></div>`},
+	{id:'bar',label:'Bar',html:`<div style="background:rgba(255,255,255,.04);border-bottom:2px solid #7c6af7;padding:6px 12px;display:flex;gap:12px;align-items:center"><span style="font-size:12px">🔴 RMA</span><span style="font-size:14px;font-weight:bold;color:white">2 - 1</span><span style="font-size:12px">FCB 🔵</span></div>`},
+	{id:'minimal',label:'Minimal',html:`<div style="display:flex;gap:10px;align-items:center"><span style="font-size:12px">RMA</span><span style="font-size:14px;font-weight:bold;color:white">2 - 1</span><span style="font-size:12px">FCB</span></div>`}
+];
+
+function buildSportsStyleSwatches(){
+	const grid=$('sports-style-grid');if(!grid)return;safeHTML(grid,'');
+	SPORTS_STYLES_DEF.forEach(st=>{
+		const sw=document.createElement('div');sw.className='swatch-wide'+(S.sportsStyle===st.id?' active':'');
+		safeHTML(sw,`<div class="sw-preview" style="justify-content:center">${st.html}</div><div class="sw-label">${st.label}</div>`);
+		sw.addEventListener('click',()=>{
+			S.sportsStyle=st.id;
+			if($('sports-wrap')) $('sports-wrap').className='sports-'+st.id;
+			buildSportsStyleSwatches();
+			scheduleSave();
+		});
+		grid.appendChild(sw);
+	});
+}
+
 function openPanel(){
 	document.body.classList.add('panel-open');
 	clearTimeout(fadeTimer);document.body.classList.remove('faded');
 	syncForm();buildGallery();
 	buildThemeSwatches();buildSearchStyleSwatches();buildLinkStyleSwatches();
 	buildWeatherStyleSwatches();buildSettingsStyleSwatches();buildPrayerStyleSwatches();
-	buildQuoteStyleSwatches();buildCalendarStyleSwatches();
+	buildQuoteStyleSwatches();buildCalendarStyleSwatches();buildSportsStyleSwatches();
 }
 function closePanel(){document.body.classList.remove('panel-open');if(S.autoFade)resetFadeTimer();}
 
 function syncForm(){
-	['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','weatherVisible','autoFade','prayerVisible','quoteVisible','calendarVisible']
+	['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','weatherVisible','autoFade','prayerVisible','quoteVisible','calendarVisible','sportsVisible']
     .forEach(k=>{const el=$(k);if(el)el.checked=!!S[k];});
-	['clockFormat','clockSize','searchEngine','videoSpeed','linksSize','weatherUnit','prayerMethod','quoteSource','quoteStyle','arabicFont','quranReciter','calendarProvider','calendarStyle']
+	['clockFormat','clockSize','searchEngine','videoSpeed','linksSize','weatherUnit','prayerMethod','quoteSource','quoteStyle','arabicFont','quranReciter','calendarProvider','calendarStyle','sportsLeague']
     .forEach(k=>{const el=$(k);if(el)el.value=S[k];});
 	const gn=$('greetingName');if(gn)gn.value=S.greetingName||'';
 	const dimEl=$('videoDim'),dimV=$('videoDim-val');if(dimEl){dimEl.value=S.videoDim;if(dimV)dimV.textContent=S.videoDim+'%';}
@@ -1129,7 +1152,7 @@ function syncForm(){
 }
 
 function buildPositionGrids(){
-	['clockPosition','searchPosition','linksPosition','weatherPosition','prayerPosition','quotePosition','calendarPosition'].forEach(key=>{
+	['clockPosition','searchPosition','linksPosition','weatherPosition','prayerPosition','quotePosition','calendarPosition','sportsPosition'].forEach(key=>{
 		const grid=$('grid-'+key);if(!grid)return;safeHTML(grid,'');
 		POSITIONS_ORDER.forEach(pos=>{
 			const cell=document.createElement('div');cell.className='pos-cell'+(S[key]===pos?' sel':'');
@@ -1138,7 +1161,7 @@ function buildPositionGrids(){
 				if(isMoving)return;isMoving=true;
 				grid.querySelectorAll('.pos-cell').forEach(c=>c.classList.remove('sel'));cell.classList.add('sel');
 				const old=S[key];S[key]=pos;
-				const wid=key==='clockPosition'?'clock-wrap':key==='searchPosition'?'search-wrap':key==='linksPosition'?'links-wrap':key==='prayerPosition'?'prayer-wrap':key==='quotePosition'?'quote-wrap':key==='calendarPosition'?'calendar-wrap':'weather-wrap';
+				const wid=key==='clockPosition'?'clock-wrap':key==='searchPosition'?'search-wrap':key==='linksPosition'?'links-wrap':key==='prayerPosition'?'prayer-wrap':key==='quotePosition'?'quote-wrap':key==='calendarPosition'?'calendar-wrap':key==='sportsPosition'?'sports-wrap':'weather-wrap';
 				if(pos!==old)await moveWidget(wid,pos);
 				isMoving=false;scheduleSave();
 			});
@@ -1148,9 +1171,9 @@ function buildPositionGrids(){
 }
 
 function collectForm(){
-	['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','weatherVisible','autoFade','prayerVisible','quoteVisible','calendarVisible']
+	['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','weatherVisible','autoFade','prayerVisible','quoteVisible','calendarVisible','sportsVisible']
     .forEach(k=>{const el=$(k);if(el)S[k]=el.checked;});
-	['clockFormat','clockSize','searchEngine','videoSpeed','linksSize','weatherUnit','quoteSource','quoteStyle','arabicFont','quranReciter','calendarProvider','calendarStyle']
+	['clockFormat','clockSize','searchEngine','videoSpeed','linksSize','weatherUnit','quoteSource','quoteStyle','arabicFont','quranReciter','calendarProvider','calendarStyle','sportsLeague']
     .forEach(k=>{const el=$(k);if(el)S[k]=el.value;});
 	const pm=$('prayerMethod');if(pm)S.prayerMethod=parseInt(pm.value);
 	const gn=$('greetingName');if(gn)S.greetingName=gn.value;
@@ -1181,6 +1204,109 @@ function renderLinksEditor(){
 	});
 }
 
+let sportsData = null;
+
+function startSportsTimer() {
+	if (sportsTimer) clearInterval(sportsTimer);
+	if (S.sportsVisible) {
+		fetchSports();
+		sportsTimer = setInterval(fetchSports, 10000); // Live sync every 10 seconds
+	}
+}
+
+function stopSportsTimer() {
+	if (sportsTimer) {
+		clearInterval(sportsTimer);
+		sportsTimer = null;
+	}
+}
+async function fetchSports() {
+	const wrap = $('sports-wrap'); if (!wrap) return;
+	
+	// ONLY show loading text if the widget is completely empty (like on startup)
+	if (wrap.children.length === 0 || wrap.querySelector('#sports-retry')) {
+		safeHTML(wrap, `<div style="font-size:11px;color:rgba(255,255,255,.4);text-align:center;padding:10px;">⚽ Loading Matches…</div>`);
+	}
+	
+	const league = S.sportsLeague || 'uefa.champions';
+	try {
+		const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/scoreboard`);
+		const json = await res.json();
+		
+		if (!json.events || json.events.length === 0) {
+			safeHTML(wrap, `<div style="font-size:11px;color:rgba(255,255,255,.4);text-align:center;">No upcoming matches</div>`);
+			return;
+		}
+		
+		const match = json.events[0];
+		const comp = match.competitions[0];
+		const home = comp.competitors.find(c => c.homeAway === 'home');
+		const away = comp.competitors.find(c => c.homeAway === 'away');
+		const status = match.status.type.state; 
+		
+		const dateObj = new Date(match.date);
+		const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+		const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+		
+		renderSportsCard(wrap, json.leagues[0].name, home, away, status, timeStr, dateStr, match.status.type.shortDetail);
+		} catch (e) {
+		// If a background fetch fails, we only show an error if nothing was there before
+		if (wrap && (wrap.children.length === 0 || wrap.textContent.includes('Loading Matches'))) {
+			safeHTML(wrap, `<div style="font-size:11px;color:rgba(255,120,80,.7);text-align:center;cursor:pointer;" id="sports-retry">⚠️ Matches unavailable — tap to retry</div>`);
+			$('sports-retry')?.addEventListener('click', fetchSports, { once: true });
+		}
+	}
+}
+
+function renderSportsCard(wrap, leagueName, home, away, status, timeStr, dateStr, statusDetail) {
+	// Dynamically apply the chosen style class (Card, Bar, or Minimal)
+	wrap.className = 'sports-' + (S.sportsStyle || 'card');
+
+	let centerBlock = '';
+	if (status === 'in') {
+		centerBlock = `
+			<span class="sports-live-badge">${statusDetail}</span>
+			<span class="sports-time" style="font-size: 22px; margin-top: 4px;">${home.score} - ${away.score}</span>
+		`;
+	} else if (status === 'post') {
+		centerBlock = `
+			<span style="font-size: 10px; color: rgba(255,255,255,0.4);">FT</span>
+			<span class="sports-time" style="font-size: 20px;">${home.score} - ${away.score}</span>
+			<span class="sports-date">${dateStr}</span>
+		`;
+	} else {
+		centerBlock = `
+			<span class="sports-time">${timeStr}</span>
+			<span class="sports-date">${dateStr}</span>
+		`;
+	}
+
+	// Extract the direct ESPN team URLs
+	const homeLink = home.team.links?.[0]?.href || '#';
+	const awayLink = away.team.links?.[0]?.href || '#';
+
+	const html = `
+		<div class="sports-header">
+			<span>⚽ ${leagueName}</span>
+			<span>${status === 'in' ? '🔴 Live' : 'Upcoming'}</span>
+		</div>
+		<div class="sports-match">
+			<a href="${homeLink}" target="_blank" class="sports-team" title="View ${home.team.name} on ESPN">
+				<img src="${home.team.logo}" alt="${home.team.abbreviation}" onerror="this.style.display='none'"/>
+				<span class="sports-team-name">${home.team.abbreviation || home.team.shortDisplayName}</span>
+			</a>
+			<div class="sports-score-time">
+				${centerBlock}
+			</div>
+			<a href="${awayLink}" target="_blank" class="sports-team" title="View ${away.team.name} on ESPN">
+				<img src="${away.team.logo}" alt="${away.team.abbreviation}" onerror="this.style.display='none'"/>
+				<span class="sports-team-name">${away.team.abbreviation || away.team.shortDisplayName}</span>
+			</a>
+		</div>
+	`;
+	safeHTML(wrap, html);
+}
+
 async function init(){
 	const savedS=await storageGet('settings');
 	S=Object.assign({},DEFAULT_SETTINGS,savedS||{});
@@ -1188,13 +1314,13 @@ async function init(){
 	userGallery=(await storageGet('user_gallery_index'))||[];
 	
 	placeAllWidgets();
-
+	
 	let activeInteractiveMode = null;
 	let bgAnimFrame = null;
 	let mouse = { x: -1000, y: -1000, vx: 0, vy: 0, lastX: -1000, lastY: -1000 };
 	let particles = [];
 	let gridPoints = [];
-
+	
 	window.addEventListener('mousemove', e => {
 		mouse.vx = e.clientX - mouse.lastX;
 		mouse.vy = e.clientY - mouse.lastY;
@@ -1203,13 +1329,13 @@ async function init(){
 		mouse.lastX = e.clientX;
 		mouse.lastY = e.clientY;
 	});
-
+	
 	function getCanvasDimensions(){
 		const w=window.innerWidth||document.documentElement.clientWidth||screen.width||1920;
 		const h=window.innerHeight||document.documentElement.clientHeight||screen.height||1080;
 		return{w,h};
 	}
-
+	
 	function startInteractiveCanvas(canvas, mode){
 		if(bgAnimFrame){cancelAnimationFrame(bgAnimFrame);bgAnimFrame=null;}
 		const{w,h}=getCanvasDimensions();
@@ -1220,7 +1346,7 @@ async function init(){
 		canvas.width=w;canvas.height=h;
 		initInteractiveCanvas(canvas,mode);
 	}
-
+	
 	const _baseApplyGradient=applyGradient;
 	applyGradient=function(i){
 		_baseApplyGradient(i);
@@ -1232,12 +1358,12 @@ async function init(){
 			activeInteractiveMode=p.interactive;
 			canvas.style.display='block';
 			startInteractiveCanvas(canvas,activeInteractiveMode);
-		}else{
+			}else{
 			activeInteractiveMode=null;
 			canvas.style.display='none';
 		}
 	};
-
+	
 	const canvasResizeObserver=new ResizeObserver(()=>{
 		const canvas=$('bg-canvas');
 		if(!canvas||!activeInteractiveMode)return;
@@ -1249,7 +1375,7 @@ async function init(){
 		}
 	});
 	canvasResizeObserver.observe(document.body);
-
+	
 	if(S.bgType==='image'&&S.bgActiveKey){const d=await storageGet(S.bgActiveKey);if(d)loadImageIntoDOM(d);else S.bgType='gradient';}
 	else if(S.bgType==='video'&&S.bgActiveKey){
 		const entry=userGallery.find(e=>e.dataKey===S.bgActiveKey);
@@ -1263,7 +1389,7 @@ async function init(){
 	}
 	applyGradient(S.bgGradientIndex||0);
 	if(S.bgType==='gradient')showBgLayer('gradient');
-
+	
 	applyAll();renderLinks();startClock();
 	animateFavicon();
 	
@@ -1271,7 +1397,7 @@ async function init(){
 		const ctx = canvas.getContext('2d');
 		particles = [];
 		gridPoints = [];
-
+		
 		if (mode === 'constellation' || mode === 'swarm' || mode === 'mesh') {
 			let count = Math.floor((canvas.width * canvas.height) / 12000);
 			if (mode === 'swarm') count = 110;
@@ -1285,12 +1411,12 @@ async function init(){
 					vy: (Math.random() - 0.5) * (mode === 'swarm' ? 1.5 : 0.8),
 					radius: mode === 'mesh' ? 1.5 : (Math.random() * 2 + 1),
 					color: mode === 'swarm'
-						? `hsl(${Math.random() * 60 + 230}, 80%, 65%)`
-						: 'rgba(180, 200, 255, 0.7)'
+					? `hsl(${Math.random() * 60 + 230}, 80%, 65%)`
+					: 'rgba(180, 200, 255, 0.7)'
 				});
 			}
 		}
-
+		
 		if (mode === 'gravity' || mode === 'field') {
 			const spacing = mode === 'field' ? 32 : 35;
 			const cols = Math.ceil(canvas.width / spacing) + 1;
@@ -1301,7 +1427,7 @@ async function init(){
 				}
 			}
 		}
-
+		
 		if (mode === 'liquid') {
 			const count = Math.max(6, Math.floor((canvas.width * canvas.height) / 80000));
 			for (let i = 0; i < count; i++) {
@@ -1316,7 +1442,7 @@ async function init(){
 				});
 			}
 		}
-
+		
 		if (mode === 'curtain') {
 			const cols = Math.ceil(canvas.width / 18);
 			for (let i = 0; i < cols; i++) {
@@ -1331,7 +1457,7 @@ async function init(){
 				});
 			}
 		}
-
+		
 		if (mode === 'neonrain') {
 			const count = Math.max(60, Math.floor(canvas.width / 14));
 			for (let i = 0; i < count; i++) {
@@ -1346,7 +1472,7 @@ async function init(){
 				});
 			}
 		}
-
+		
 		if (mode === 'sand') {
 			const count = Math.max(800, Math.floor((canvas.width * canvas.height) / 1800));
 			for (let i = 0; i < count; i++) {
@@ -1365,7 +1491,7 @@ async function init(){
 		
 		function loop() {
 			if (!activeInteractiveMode) return;
-
+			
 			const bgColors = {
 				constellation:'#05050a', gravity:'#04040a', swarm:'#04040c',
 				field:'#04040a', mesh:'#05050a',
@@ -1587,7 +1713,7 @@ async function init(){
 					if (p.x > canvas.width + p.r) p.x = -p.r;
 					if (p.y < -p.r) p.y = canvas.height + p.r;
 					if (p.y > canvas.height + p.r) p.y = -p.r;
-
+					
 					if (mouse.x > 0) {
 						const dx = mouse.x - p.x, dy = mouse.y - p.y;
 						const dist = Math.hypot(dx, dy);
@@ -1597,7 +1723,7 @@ async function init(){
 						}
 					}
 					p.vx *= 0.96; p.vy *= 0.96;
-
+					
 					const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
 					grd.addColorStop(0,   `hsla(${p.hue}, 70%, 75%, 0.18)`);
 					grd.addColorStop(0.4, `hsla(${p.hue + 30}, 80%, 55%, 0.10)`);
@@ -1607,7 +1733,7 @@ async function init(){
 					ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
 					ctx.fill();
 				});
-
+				
 				for (let i = 0; i < particles.length; i++) {
 					for (let j = i + 1; j < particles.length; j++) {
 						const a = particles[i], b = particles[j];
@@ -1628,17 +1754,17 @@ async function init(){
 					}
 				}
 			}
-
+			
 			// ==========================================
 			// 7. AURORA CURTAIN
 			// ==========================================
 			else if (mode === 'curtain') {
 				const t = performance.now() * 0.001;
 				const H = canvas.height;
-
+				
 				gridPoints.forEach(col => {
 					col.phase += col.speed;
-
+					
 					if (mouse.x > 0) {
 						const dx = mouse.x - col.x;
 						if (Math.abs(dx) < 120) {
@@ -1647,32 +1773,32 @@ async function init(){
 						}
 					}
 					col.ripple *= 0.93;
-
+					
 					const segments = 60;
 					const segH = H / segments;
-
+					
 					for (let s = 0; s < segments; s++) {
 						const yTop = s * segH;
 						const yBot = yTop + segH + 1;
 						const progress = s / segments;
-
+						
 						const wave = Math.sin(col.phase + progress * 4.5) * col.amp;
 						const rippleWave = col.rippleY > 0
-							? Math.sin((yTop - col.rippleY) * 0.03 + t * 4) * col.ripple * 12 * (1 - Math.abs(yTop - col.rippleY) / H)
-							: 0;
-
+						? Math.sin((yTop - col.rippleY) * 0.03 + t * 4) * col.ripple * 12 * (1 - Math.abs(yTop - col.rippleY) / H)
+						: 0;
+						
 						const xOffset = wave + rippleWave;
 						const nextProgress = (s + 1) / segments;
 						const nextWave = Math.sin(col.phase + nextProgress * 4.5) * col.amp;
 						const nextRipple = col.rippleY > 0
-							? Math.sin((yBot - col.rippleY) * 0.03 + t * 4) * col.ripple * 12 * (1 - Math.abs(yBot - col.rippleY) / H)
-							: 0;
+						? Math.sin((yBot - col.rippleY) * 0.03 + t * 4) * col.ripple * 12 * (1 - Math.abs(yBot - col.rippleY) / H)
+						: 0;
 						const xOffsetNext = nextWave + nextRipple;
-
+						
 						const brightness = 0.35 + Math.sin(col.phase + progress * 3) * 0.2;
 						const alpha = brightness * (0.4 + Math.sin(col.phase * 1.3 + progress * 2) * 0.25);
 						const hShift = Math.sin(col.phase * 0.5 + progress) * 40;
-
+						
 						ctx.strokeStyle = `hsla(${col.hue + hShift}, 85%, 65%, ${Math.max(0, alpha)})`;
 						ctx.lineWidth = 10;
 						ctx.lineCap = 'round';
@@ -1683,7 +1809,7 @@ async function init(){
 					}
 				});
 			}
-
+			
 			// ==========================================
 			// 8. NEON RAIN
 			// ==========================================
@@ -1701,7 +1827,7 @@ async function init(){
 					p.drift *= 0.92;
 					p.x += p.drift;
 					p.y += p.speed;
-
+					
 					if (p.y > canvas.height + p.len) {
 						p.y = -p.len - Math.random() * 100;
 						p.x = Math.random() * canvas.width;
@@ -1709,7 +1835,7 @@ async function init(){
 					}
 					if (p.x < -10) p.x = canvas.width + 10;
 					if (p.x > canvas.width + 10) p.x = -10;
-
+					
 					const grd = ctx.createLinearGradient(p.x, p.y - p.len, p.x, p.y);
 					grd.addColorStop(0, `hsla(${p.hue}, 100%, 65%, 0)`);
 					grd.addColorStop(0.7, `hsla(${p.hue}, 100%, 70%, ${p.alpha * 0.6})`);
@@ -1724,7 +1850,7 @@ async function init(){
 					ctx.lineTo(p.x, p.y);
 					ctx.stroke();
 					ctx.shadowBlur = 0;
-
+					
 					if (Math.random() < 0.004) {
 						ctx.fillStyle = `hsla(${p.hue}, 100%, 90%, ${p.alpha})`;
 						ctx.beginPath();
@@ -1733,184 +1859,199 @@ async function init(){
 					}
 				});
 			}
-// ==========================================
-							// 9. SAND DUNES
-							// ==========================================
-							else if (mode === 'sand') {
-								const t = performance.now() * 0.0004;
-								particles.forEach(p => {
-									const windX = Math.sin(t + p.y * 0.004) * 0.5 + 0.3;
-									const windY = Math.cos(t * 0.7 + p.x * 0.003) * 0.15;
-									
-									if (mouse.x > 0) {
-										const dx = p.x - mouse.x, dy = p.y - mouse.y;
-										const dist = Math.hypot(dx, dy);
-										if (dist < 180) {
-											const blast = (1 - dist / 180) * 5;
-											p.vx += (dx / dist) * blast;
-											p.vy += (dy / dist) * blast;
-										}
-									}
-									
-									p.vx = p.vx * 0.88 + (windX + p.baseVx) * 0.12;
-									p.vy = p.vy * 0.88 + windY * 0.12;
-									p.x += p.vx;
-									p.y += p.vy;
-									
-									if (p.x < 0) p.x = canvas.width;
-									if (p.x > canvas.width) p.x = 0;
-									if (p.y < 0) p.y = canvas.height;
-									if (p.y > canvas.height) p.y = 0;
-									
-									const speedMag = Math.hypot(p.vx, p.vy);
-									const lit = Math.min(1, speedMag * 0.4);
-									ctx.fillStyle = `hsla(${p.hue}, 40%, ${30 + lit * 40}%, ${p.alpha})`;
-									ctx.beginPath();
-									ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-									ctx.fill();
-								});
-							}
-							
-							mouse.vx *= 0.5; mouse.vy *= 0.5;
-							bgAnimFrame = requestAnimationFrame(loop);
-						} // <--- CORRECTLY CLOSES loop()
-						
-						loop(); // <--- STARTS THE LOOP
-					} // <--- CORRECTLY CLOSES initInteractiveCanvas()
+			// ==========================================
+			// 9. SAND DUNES
+			// ==========================================
+			else if (mode === 'sand') {
+				const t = performance.now() * 0.0004;
+				particles.forEach(p => {
+					const windX = Math.sin(t + p.y * 0.004) * 0.5 + 0.3;
+					const windY = Math.cos(t * 0.7 + p.x * 0.003) * 0.15;
 					
-					// ==========================================
-					// REST OF EXTENSION INIT()
-					// ==========================================
-					
-					document.addEventListener('visibilitychange',()=>{
-						if(document.hidden){
-							clearTimeout(favAnimFrame);favAnimFrame=null;
-							clearInterval(clockTimer);clockTimer=null;
-							stopQuoteAudio();
-							if(bgAnimFrame){cancelAnimationFrame(bgAnimFrame);bgAnimFrame=null;}
-						}else{
-							if(!favAnimFrame)animateFavicon();
-							startClock();
-							if(activeInteractiveMode){
-								const canvas=$('bg-canvas');
-								if(canvas)startInteractiveCanvas(canvas,activeInteractiveMode);
-							}
+					if (mouse.x > 0) {
+						const dx = p.x - mouse.x, dy = p.y - mouse.y;
+						const dist = Math.hypot(dx, dy);
+						if (dist < 180) {
+							const blast = (1 - dist / 180) * 5;
+							p.vx += (dx / dist) * blast;
+							p.vy += (dy / dist) * blast;
 						}
-					});
+					}
 					
-					$('quoteVisible')?.addEventListener('change',()=>{
-						collectForm();applyVisibility();
-						if(S.quoteVisible&&!quoteData)fetchQuote();
-						scheduleSave();
-					});
-					$('quoteSource')?.addEventListener('change',()=>{collectForm();quoteData=null;if(S.quoteVisible)fetchQuote();scheduleSave();});
-					$('quoteStyle')?.addEventListener('change',()=>{collectForm();if(quoteData)renderQuote();scheduleSave();});
-					$('arabicFont')?.addEventListener('change',()=>{collectForm();applyArabicFont();if(quoteData)renderQuote();scheduleSave();});
-					$('quranReciter')?.addEventListener('change',()=>{collectForm();stopQuoteAudio();if(quoteData?.type==='quran')renderQuote();scheduleSave();});
-					$('calendarVisible')?.addEventListener('change',()=>{
-						collectForm();applyVisibility();
-						if(S.calendarVisible)renderCalendar();
-						scheduleSave();
-					});
-					$('calendarProvider')?.addEventListener('change',()=>{collectForm();if(S.calendarVisible)renderCalendar();scheduleSave();});
-					$('calendarStyle')?.addEventListener('change',()=>{collectForm();if(S.calendarVisible)renderCalendar();scheduleSave();});
+					p.vx = p.vx * 0.88 + (windX + p.baseVx) * 0.12;
+					p.vy = p.vy * 0.88 + windY * 0.12;
+					p.x += p.vx;
+					p.y += p.vy;
 					
-					if(S.weatherVisible)fetchWeather();
-					if(S.prayerVisible)fetchPrayerTimes();
-					if(S.quoteVisible)fetchQuote();
-					else applyArabicFont();
-					if(S.calendarVisible)renderCalendar();
+					if (p.x < 0) p.x = canvas.width;
+					if (p.x > canvas.width) p.x = 0;
+					if (p.y < 0) p.y = canvas.height;
+					if (p.y > canvas.height) p.y = 0;
 					
-					requestAnimationFrame(()=>{const l=$('loader');if(l){l.classList.add('done');setTimeout(()=>l.remove(),1100);}});
-					
-					// Await is now safely back in the top level of the async init() function!
-					const onboarded=await storageGet('onboarded');
-					if(!onboarded)setTimeout(showOnboarding,900);
-					
-					['mousemove','keydown','mousedown','touchstart'].forEach(ev=>{
-						document.addEventListener(ev,()=>{if(S.autoFade)resetFadeTimer();},{passive:true});
-					});
-					
-					$('ob-next').addEventListener('click',()=>{if(obStep<OB_STEPS.length-1){obStep++;renderObStep();}else hideOnboarding();});
-					$('ob-skip').addEventListener('click',hideOnboarding);
-					$('show-ob-btn')?.addEventListener('click',()=>{closePanel();setTimeout(showOnboarding,300);});
-					
-					$('settings-btn').addEventListener('click',()=>{
-						if(document.body.classList.contains('panel-open'))closePanel();
-						else openPanel();
-					});
-					$('panel-close').addEventListener('click',closePanel);
-					document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
-					
-					document.querySelectorAll('.p-tab').forEach(tab=>{
-						tab.addEventListener('click',()=>{
-							document.querySelectorAll('.p-tab').forEach(t=>t.classList.remove('active'));
-							document.querySelectorAll('.p-page').forEach(p=>p.classList.remove('active'));
-							tab.classList.add('active');$('tab-'+tab.dataset.tab)?.classList.add('active');
-						});
-					});
-					
-					function onChange(){collectForm();applyAll();scheduleSave();}
-					['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','autoFade'].forEach(k=>$(k)?.addEventListener('change',onChange));
-					['clockFormat','clockSize','searchEngine','videoSpeed','linksSize'].forEach(k=>$(k)?.addEventListener('change',onChange));
-					$('greetingName')?.addEventListener('input',onChange);
-					
-					$('weatherVisible')?.addEventListener('change',()=>{
-						collectForm();applyAll();
-						if(S.weatherVisible&&weatherCelsius===null)fetchWeather();
-						scheduleSave();
-					});
-					$('weatherUnit')?.addEventListener('change',()=>{collectForm();renderWeatherTemp();scheduleSave();});
-					
-					$('prayerVisible')?.addEventListener('change',()=>{
-						collectForm();applyVisibility();
-						if(S.prayerVisible&&!prayerData)fetchPrayerTimes();
-						scheduleSave();
-					});
-					$('prayerMethod')?.addEventListener('change',()=>{
-						collectForm();prayerData=null;if(S.prayerVisible)fetchPrayerTimes();scheduleSave();
-					});
-					
-					const dimSl=$('videoDim'),dimVl=$('videoDim-val');
-					dimSl?.addEventListener('input',()=>{S.videoDim=parseInt(dimSl.value);if(dimVl)dimVl.textContent=dimSl.value+'%';applyVideoDim();scheduleSave();});
-					const fdSl=$('autoFadeDelay'),fdVl=$('autoFadeDelay-val');
-					fdSl?.addEventListener('input',()=>{S.autoFadeDelay=parseInt(fdSl.value);if(fdVl)fdVl.textContent=fdSl.value+'s';if(S.autoFade)resetFadeTimer();scheduleSave();});
-					
-					$('file-image-input').addEventListener('change',e=>{handleFileUpload(e.target.files[0],'image');e.target.value='';});
-					$('file-video-input').addEventListener('change',e=>{handleFileUpload(e.target.files[0],'video');e.target.value='';});
-					
-					$('sound-btn').addEventListener('click',()=>{const v=$('bg-video');if(!v)return;v.muted=!v.muted;S.videoMuted=v.muted;updateSoundBtn();scheduleSave();});
-					
-					$('open-links-modal-btn').addEventListener('click',openLinksModal);
-					$('lm-cancel').addEventListener('click',closeLinksModal);
-					$('links-modal').addEventListener('click',e=>{if(e.target===$('links-modal'))closeLinksModal();});
-					$('add-link-btn').addEventListener('click',()=>{tempLinks.push({emoji:'🔗',label:'New Link',url:'https://'});renderLinksEditor();});
-					$('lm-save').addEventListener('click',async()=>{links=tempLinks.filter(l=>l.url.trim()&&l.url!=='https://');await storageSet('quick_links',links);renderLinks();closeLinksModal();});
-					
-					$('r-settings').addEventListener('click',async()=>{if(!confirm('Reset all settings?'))return;S={...DEFAULT_SETTINGS};await storageSet('settings',S);placeAllWidgets();applyAll();syncForm();});
-					$('r-bg').addEventListener('click',async()=>{
-						if(!confirm('Reset background?'))return;
-						if(S.bgActiveKey&&_blobCache[S.bgActiveKey]){URL.revokeObjectURL(_blobCache[S.bgActiveKey]);delete _blobCache[S.bgActiveKey];}
-						S.bgType='gradient';S.bgGradientIndex=0;S.bgActiveKey=null;
-						applyGradient(0);showBgLayer('gradient');buildGallery();scheduleSave();
-					});
-					$('r-links').addEventListener('click',async()=>{if(!confirm('Restore default links?'))return;links=[...DEFAULT_LINKS];await storageSet('quick_links',links);renderLinks();});
-					$('r-all').addEventListener('click',async()=>{
-						if(!confirm('Wipe ALL data?'))return;
-						await chrome.storage.local.clear();
-						await idbClear();
-						Object.values(_blobCache).forEach(u=>URL.revokeObjectURL(u));
-						Object.keys(_blobCache).forEach(k=>delete _blobCache[k]);
-						S={...DEFAULT_SETTINGS};links=[...DEFAULT_LINKS];userGallery=[];
-						prayerData=null;prayerHijri=null;prayerDateStr=null;_lastNextPrayerIndex=-1;forecastData=null;quoteData=null;stopQuoteAudio();
-						placeAllWidgets();applyAll();renderLinks();syncForm();
-						applyGradient(0);showBgLayer('gradient');
-						const img=$('bg-image'),vid=$('bg-video');
-						if(img){img.src='';img.classList.remove('loaded');}
-						if(vid){vid.src='';vid.classList.remove('loaded');}
-						buildGallery();
-					});
-				} // <--- CORRECTLY CLOSES init()
+					const speedMag = Math.hypot(p.vx, p.vy);
+					const lit = Math.min(1, speedMag * 0.4);
+					ctx.fillStyle = `hsla(${p.hue}, 40%, ${30 + lit * 40}%, ${p.alpha})`;
+					ctx.beginPath();
+					ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+					ctx.fill();
+				});
+			}
+			
+			mouse.vx *= 0.5; mouse.vy *= 0.5;
+			bgAnimFrame = requestAnimationFrame(loop);
+		} // <--- CORRECTLY CLOSES loop()
+		
+		loop(); // <--- STARTS THE LOOP
+	} // <--- CORRECTLY CLOSES initInteractiveCanvas()
+	
+	// ==========================================
+	// REST OF EXTENSION INIT()
+	// ==========================================
+	
+	document.addEventListener('visibilitychange',()=>{
+		if(document.hidden){
+			clearTimeout(favAnimFrame);favAnimFrame=null;
+			clearInterval(clockTimer);clockTimer=null;
+			stopQuoteAudio();
+			stopSportsTimer(); // <--- STOPS REAL-TIME FETCHING WHEN HIDDEN
+			if(bgAnimFrame){cancelAnimationFrame(bgAnimFrame);bgAnimFrame=null;}
+			}else{
+			if(!favAnimFrame)animateFavicon();
+			startClock();
+			if(S.sportsVisible) startSportsTimer(); // <--- RESUMES LIVE FETCHING
+			if(activeInteractiveMode){
+				const canvas=$('bg-canvas');
+				if(canvas)startInteractiveCanvas(canvas,activeInteractiveMode);
+			}
+		}
+	});
+	
+	$('quoteVisible')?.addEventListener('change',()=>{
+		collectForm();applyVisibility();
+		if(S.quoteVisible&&!quoteData)fetchQuote();
+		scheduleSave();
+	});
+	$('quoteSource')?.addEventListener('change',()=>{collectForm();quoteData=null;if(S.quoteVisible)fetchQuote();scheduleSave();});
+	$('quoteStyle')?.addEventListener('change',()=>{collectForm();if(quoteData)renderQuote();scheduleSave();});
+	$('arabicFont')?.addEventListener('change',()=>{collectForm();applyArabicFont();if(quoteData)renderQuote();scheduleSave();});
+	$('quranReciter')?.addEventListener('change',()=>{collectForm();stopQuoteAudio();if(quoteData?.type==='quran')renderQuote();scheduleSave();});
+	$('calendarVisible')?.addEventListener('change',()=>{
+		collectForm();applyVisibility();
+		if(S.calendarVisible)renderCalendar();
+		scheduleSave();
+	});
+	$('calendarProvider')?.addEventListener('change',()=>{collectForm();if(S.calendarVisible)renderCalendar();scheduleSave();});
+	$('calendarStyle')?.addEventListener('change',()=>{collectForm();if(S.calendarVisible)renderCalendar();scheduleSave();});
+	
+	if(S.weatherVisible)fetchWeather()
+	if(S.weatherVisible)fetchWeather();
+	if(S.prayerVisible)fetchPrayerTimes();
+	if(S.quoteVisible)fetchQuote();
+	else applyArabicFont();
+	if(S.calendarVisible)renderCalendar();
+	if(S.sportsVisible) startSportsTimer();	
+	requestAnimationFrame(()=>{const l=$('loader');if(l){l.classList.add('done');setTimeout(()=>l.remove(),1100);}});
+	
+	// Await is now safely back in the top level of the async init() function!
+	const onboarded=await storageGet('onboarded');
+	if(!onboarded)setTimeout(showOnboarding,900);
+	
+	['mousemove','keydown','mousedown','touchstart'].forEach(ev=>{
+		document.addEventListener(ev,()=>{if(S.autoFade)resetFadeTimer();},{passive:true});
+	});
+	
+	$('ob-next').addEventListener('click',()=>{if(obStep<OB_STEPS.length-1){obStep++;renderObStep();}else hideOnboarding();});
+	$('ob-skip').addEventListener('click',hideOnboarding);
+	$('show-ob-btn')?.addEventListener('click',()=>{closePanel();setTimeout(showOnboarding,300);});
+	
+	$('settings-btn').addEventListener('click',()=>{
+		if(document.body.classList.contains('panel-open'))closePanel();
+		else openPanel();
+	});
+	$('panel-close').addEventListener('click',closePanel);
+	document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
+	
+	document.querySelectorAll('.p-tab').forEach(tab=>{
+		tab.addEventListener('click',()=>{
+			document.querySelectorAll('.p-tab').forEach(t=>t.classList.remove('active'));
+			document.querySelectorAll('.p-page').forEach(p=>p.classList.remove('active'));
+			tab.classList.add('active');$('tab-'+tab.dataset.tab)?.classList.add('active');
+		});
+	});
+	
+	function onChange(){collectForm();applyAll();scheduleSave();}
+	['clockVisible','dateVisible','greetingEnabled','searchVisible','linksVisible','autoFade'].forEach(k=>$(k)?.addEventListener('change',onChange));
+	['clockFormat','clockSize','searchEngine','videoSpeed','linksSize'].forEach(k=>$(k)?.addEventListener('change',onChange));
+	$('greetingName')?.addEventListener('input',onChange);
+	
+	$('weatherVisible')?.addEventListener('change',()=>{
+		collectForm();applyAll();
+		if(S.weatherVisible&&weatherCelsius===null)fetchWeather();
+		scheduleSave();
+	});
+	$('weatherUnit')?.addEventListener('change',()=>{collectForm();renderWeatherTemp();scheduleSave();});
+	
+	$('prayerVisible')?.addEventListener('change',()=>{
+		collectForm();applyVisibility();
+		if(S.prayerVisible&&!prayerData)fetchPrayerTimes();
+		scheduleSave();
+	});
+	$('prayerMethod')?.addEventListener('change',()=>{
+		collectForm();prayerData=null;if(S.prayerVisible)fetchPrayerTimes();scheduleSave();
+	});
+	
+	const dimSl=$('videoDim'),dimVl=$('videoDim-val');
+	dimSl?.addEventListener('input',()=>{S.videoDim=parseInt(dimSl.value);if(dimVl)dimVl.textContent=dimSl.value+'%';applyVideoDim();scheduleSave();});
+	const fdSl=$('autoFadeDelay'),fdVl=$('autoFadeDelay-val');
+	fdSl?.addEventListener('input',()=>{S.autoFadeDelay=parseInt(fdSl.value);if(fdVl)fdVl.textContent=fdSl.value+'s';if(S.autoFade)resetFadeTimer();scheduleSave();});
+	
+	$('file-image-input').addEventListener('change',e=>{handleFileUpload(e.target.files[0],'image');e.target.value='';});
+	$('file-video-input').addEventListener('change',e=>{handleFileUpload(e.target.files[0],'video');e.target.value='';});
+	
+	$('sound-btn').addEventListener('click',()=>{const v=$('bg-video');if(!v)return;v.muted=!v.muted;S.videoMuted=v.muted;updateSoundBtn();scheduleSave();});
+	
+	$('open-links-modal-btn').addEventListener('click',openLinksModal);
+	$('lm-cancel').addEventListener('click',closeLinksModal);
+	$('links-modal').addEventListener('click',e=>{if(e.target===$('links-modal'))closeLinksModal();});
+	$('add-link-btn').addEventListener('click',()=>{tempLinks.push({emoji:'🔗',label:'New Link',url:'https://'});renderLinksEditor();});
+	$('lm-save').addEventListener('click',async()=>{links=tempLinks.filter(l=>l.url.trim()&&l.url!=='https://');await storageSet('quick_links',links);renderLinks();closeLinksModal();});
+	
+	$('r-settings').addEventListener('click',async()=>{if(!confirm('Reset all settings?'))return;S={...DEFAULT_SETTINGS};await storageSet('settings',S);placeAllWidgets();applyAll();syncForm();});
+	$('r-bg').addEventListener('click',async()=>{
+		if(!confirm('Reset background?'))return;
+		if(S.bgActiveKey&&_blobCache[S.bgActiveKey]){URL.revokeObjectURL(_blobCache[S.bgActiveKey]);delete _blobCache[S.bgActiveKey];}
+		S.bgType='gradient';S.bgGradientIndex=0;S.bgActiveKey=null;
+		applyGradient(0);showBgLayer('gradient');buildGallery();scheduleSave();
+	});
+	$('r-links').addEventListener('click',async()=>{if(!confirm('Restore default links?'))return;links=[...DEFAULT_LINKS];await storageSet('quick_links',links);renderLinks();});
+	$('r-all').addEventListener('click',async()=>{
+		if(!confirm('Wipe ALL data?'))return;
+		await chrome.storage.local.clear();
+		await idbClear();
+		Object.values(_blobCache).forEach(u=>URL.revokeObjectURL(u));
+		Object.keys(_blobCache).forEach(k=>delete _blobCache[k]);
+		S={...DEFAULT_SETTINGS};links=[...DEFAULT_LINKS];userGallery=[];
+		prayerData=null;prayerHijri=null;prayerDateStr=null;_lastNextPrayerIndex=-1;forecastData=null;quoteData=null;stopQuoteAudio();
+		placeAllWidgets();applyAll();renderLinks();syncForm();
+		applyGradient(0);showBgLayer('gradient');
+		const img=$('bg-image'),vid=$('bg-video');
+		if(img){img.src='';img.classList.remove('loaded');}
+		if(vid){vid.src='';vid.classList.remove('loaded');}
+		buildGallery();
+	});
+	$('sportsVisible')?.addEventListener('change',()=>{
+		collectForm();applyVisibility();
+		if(S.sportsVisible) startSportsTimer(); // Start loop
+		else stopSportsTimer();                 // Clean up loop
+		scheduleSave();
+	});
+	
+	$('sportsLeague')?.addEventListener('change',()=>{
+		collectForm();
+		if(S.sportsVisible) startSportsTimer(); // Forces an immediate check for the new league
+		scheduleSave();
+	});
+} // <--- CORRECTLY CLOSES init()
 
 document.addEventListener('DOMContentLoaded',init);
 

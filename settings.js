@@ -51,6 +51,10 @@ const DEFAULT_SETTINGS = {
 	videoSpeed:      1.0,
 	autoFade:        false,
 	autoFadeDelay:   10,
+	sportsVisible:   false,
+	sportsLeague:    'uefa.champions',
+	sportsPosition:  'center-left',
+	sportsStyle:     'card',
 };
 
 const PRESET_GRADIENTS = [
