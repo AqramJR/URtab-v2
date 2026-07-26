@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "UrTab",
-	"version": "2.3",
+	"version": "2.3.1",
 	"description": "Your Tab, Elevated. Prayer times, Quran quotes with audio, calendar, live weather, interactive animated backgrounds.",
 	"chrome_url_overrides": {
 		"newtab": "newtab.html"
@@ -28,11 +28,7 @@
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "urtab@extension",
-			"strict_min_version": "109.0",
-			"data_collection_permissions": {
-				"required": [],
-				"optional": []
-			}
+			"strict_min_version": "109.0"
 		}
 	},
 	"content_security_policy": {
