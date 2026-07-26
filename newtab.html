@@ -464,7 +464,7 @@
 			#lm-cancel:hover{background:rgba(255,255,255,.07)}
 			#lm-save{background:rgba(255,255,255,.9);color:#111;border-color:transparent;font-weight:500}
 			#lm-save:hover{background:white}
-
+			
 			/* Sports Widget Base & Animations */
 			#sports-wrap { transition:opacity .4s,transform .4s; color:#fff; }
 			.sports-header { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:rgba(255,255,255,.5); margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,.08); padding-bottom:8px; text-transform:uppercase; letter-spacing:1px; }
@@ -615,6 +615,9 @@
 				<button class="p-tab" data-tab="more">
 					<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>More
 				</button>
+				<button class="p-tab" data-tab="support">
+					<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>Support
+				</button>
 			</div>
 			<div id="panel-body">
 				
@@ -709,13 +712,18 @@
 				<div class="p-page" id="tab-more">
 					<div class="p-label">Settings Button</div>
 					<div class="swatch-grid" id="settings-style-grid"></div>
+					
 					<div class="p-label">Tutorial</div>
 					<div class="p-row"><div class="p-row-label"><strong>Show Tutorial</strong></div><button class="p-btn acc" id="show-ob-btn">Show →</button></div>
+					
 					<div class="p-label">Reset</div>
-					<div class="p-row"><div class="p-row-label"><strong>Reset Settings</strong></div><button class="p-btn danger" id="r-settings">Reset</button></div>
-					<div class="p-row"><div class="p-row-label"><strong>Reset Background</strong></div><button class="p-btn danger" id="r-bg">Reset</button></div>
-					<div class="p-row"><div class="p-row-label"><strong>Reset Links</strong></div><button class="p-btn danger" id="r-links">Reset</button></div>
-					<div class="p-row"><div class="p-row-label"><strong>Wipe Everything</strong><span>Clears all data</span></div><button class="p-btn danger" id="r-all">Wipe All</button></div>
+					<div class="p-row">
+						<div class="p-row-label">
+							<strong>Reset to Default Settings</strong>
+							<span>Clears all data and restores defaults</span>
+						</div>
+						<button class="p-btn danger" id="r-all">Reset</button>
+					</div>
 				</div>
 				
 				<div class="p-page" id="tab-quote">
@@ -771,6 +779,35 @@
 					<div class="p-row"><div class="p-row-label"><strong>Position</strong></div><div class="pos-grid" id="grid-calendarPosition"></div></div>
 					<div class="p-label">Note</div>
 					<div class="p-row"><div class="p-row-label"><span style="line-height:1.5">Your calendar loads in an iframe using your signed-in Google account. No data leaves your browser.</span></div></div>
+				</div>
+				
+				<div class="p-page" id="tab-support">
+					<div class="p-label">Support UrTab</div>
+					<div class="p-row">
+						<div class="p-row-label" style="width:100%">
+							<span style="display:block; margin-bottom:12px; line-height:1.5; color:rgba(255,255,255,0.7);">If you enjoy using UrTab, consider supporting its development! Choose your preferred method below.</span>
+						</div>
+					</div>
+					
+					<div class="p-row">
+						<div class="p-row-label">
+							<strong>Buy Me a Coffee ☕</strong>
+						</div>
+						<a href="buymeacoffee.com/Aqram" target="_blank" class="p-btn acc" style="text-decoration:none;">Support →</a>
+					</div>
+					<div class="p-row">
+						<div class="p-row-label">
+							<strong>InstaPay</strong>
+						</div>
+						<button class="p-btn copy-btn" data-copy="aqram@instapay">Copy</button>
+					</div>
+					<div class="p-row">
+						<div class="p-row-label">
+							<strong>Binance Pay (USDT)</strong>
+						</div>
+						<!-- Replace data-copy with your Binance ID -->
+						<button class="p-btn copy-btn" data-copy="Not Yet">Copy</button>
+					</div>
 				</div>
 				<div class="p-page" id="tab-sports">
 					<div class="p-label">Live Matches</div>

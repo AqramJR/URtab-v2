@@ -30,11 +30,12 @@
 			"id": "urtab@extension",
 			"strict_min_version": "109.0",
 			"data_collection_permissions": {
-				"required": ["none"]
+				"required": [],
+				"optional": []
 			}
 		}
 	},
 	"content_security_policy": {
-		"extension_pages": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; media-src 'self' blob: data: https://everyayah.com; img-src 'self' data: blob: https://a.espncdn.com; connect-src https://api.open-meteo.com https://api.bigdatacloud.net https://api.aladhan.com https://api.alquran.cloud https://site.api.espn.com; frame-src https://calendar.google.com https://outlook.live.com; form-action *;"
+		"extension_pages": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; media-src 'self' blob: data: https://everyayah.com; img-src 'self' data: blob: https://a.espncdn.com https://a1.espncdn.com https://a2.espncdn.com; connect-src https://api.open-meteo.com https://api.bigdatacloud.net https://api.aladhan.com https://api.alquran.cloud https://site.api.espn.com https://cdn.jsdelivr.net; frame-src https://calendar.google.com https://outlook.live.com; form-action *;"
 	}
 }
