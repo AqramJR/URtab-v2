@@ -17,7 +17,7 @@
 ![Manifest](https://img.shields.io/badge/manifest-v3-5edf82?style=flat-square)
 ![Chrome](https://img.shields.io/badge/Chrome-✓-4285F4?style=flat-square)
 [![Get it on Firefox Add-ons](https://img.shields.io/badge/Firefox_Add--ons-FF7139?style=social&logo=firefox-browser)](https://addons.mozilla.org/en-US/firefox/addon/urtab-v2/)
-![Edge](https://img.shields.io/badge/Edge-✓-0078D4?style=flat-square)
+[![Microsoft Edge](https://custom-icon-badges.demolab.com/badge/Microsoft%20Edge-2771D8?logo=edge-white&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/urtab/naijigggkakgcjoemeigkpofcnmkmihb)
 ![License](https://img.shields.io/badge/license-MIT-d4a843?style=flat-square)
 
 </div>
@@ -89,7 +89,7 @@
 
 ## Installation
 
-### Chrome / Edge
+### Chrome / Brave
 
 1. Download `newtab-extension.zip` from [Releases](../../releases) and unzip
 2. Open Chrome → `chrome://extensions` (Edge → `edge://extensions`)
@@ -98,7 +98,10 @@
 5. Open a new tab
 
 ### Firefox
-[![Get it on Firefox Add-ons](https://img.shields.io/badge/Get_it_on-Firefox_Add--ons-FF7139?style=flat&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/urtab-v2/)
+[![Firefox](https://img.shields.io/badge/Firefox-FF7139?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/urtab-v2/)
+### Microsoft Edge
+[![Microsoft Edge](https://custom-icon-badges.demolab.com/badge/Microsoft%20Edge-2771D8?logo=edge-white&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/urtab/naijigggkakgcjoemeigkpofcnmkmihb)
+
 ---
 
 ## Screenshots
