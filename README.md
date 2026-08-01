@@ -17,7 +17,7 @@
 ![Manifest](https://img.shields.io/badge/manifest-v3-5edf82?style=flat-square)
 ![Chrome](https://img.shields.io/badge/Chrome-✓-4285F4?style=flat-square)
 [![Get it on Firefox Add-ons](https://img.shields.io/badge/Firefox_Add--ons-FF7139?style=social&logo=firefox-browser)](https://addons.mozilla.org/en-US/firefox/addon/urtab-v2/)
-![Edge](https://img.shields.io/badge/Edge-✓-0078D4?style=flat-square)
+[![Microsoft Edge](https://custom-icon-badges.demolab.com/badge/Microsoft%20Edge-2771D8?logo=edge-white&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/urtab/naijigggkakgcjoemeigkpofcnmkmihb)
 ![License](https://img.shields.io/badge/license-MIT-d4a843?style=flat-square)
 
 </div>
@@ -89,7 +89,7 @@
 
 ## Installation
 
-### Chrome / Edge
+### Chrome / Brave
 
 1. Download `newtab-extension.zip` from [Releases](../../releases) and unzip
 2. Open Chrome → `chrome://extensions` (Edge → `edge://extensions`)
@@ -98,7 +98,10 @@
 5. Open a new tab
 
 ### Firefox
-[![Get it on Firefox Add-ons](https://img.shields.io/badge/Get_it_on-Firefox_Add--ons-FF7139?style=flat&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/urtab-v2/)
+[![Firefox](https://img.shields.io/badge/Firefox-FF7139?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/urtab-v2/)
+### Microsoft Edge
+[![Microsoft Edge](https://custom-icon-badges.demolab.com/badge/Microsoft%20Edge-2771D8?logo=edge-white&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/urtab/naijigggkakgcjoemeigkpofcnmkmihb)
+
 ---
 
 ## Screenshots
@@ -111,8 +114,6 @@ https://github.com/user-attachments/assets/55174dfd-2ce8-4ae8-8aeb-3f645810ed57
 <img width="450" height="890" alt="Clock" src="https://github.com/user-attachments/assets/eaafa45f-e2f8-48c2-a656-29bd68fa862f" />
 <img width="450" height="890" alt="background" src="https://github.com/user-attachments/assets/02333e8b-248a-4257-baec-714effc7314e" />
 <img width="286" height="268" alt="weather" src="https://github.com/user-attachments/assets/ebcd46b4-3847-4873-a22a-5891336094ec" />
-
-
 
 
 ---
@@ -135,35 +136,50 @@ No tracking. No analytics. No ads. No external scripts loaded at runtime.
 | [Open-Meteo](https://open-meteo.com/) | Current weather + 7-day forecast |
 | [BigDataCloud](https://www.bigdatacloud.com/) | City name from coordinates + IP fallback location |
 | [Aladhan](https://aladhan.com/prayer-times-api) | Prayer times + Hijri date |
-| [alquran.cloud](https://alquran.cloud/api) | Quran verses, translations, tafsir |
+| [alquran.cloud](https://alquran.cloud/api) | Quran verses, translations, and Tafsir (fetched simultaneously) |
 | [everyayah.com](https://everyayah.com/) | Quran audio recitation MP3s |
 | [ESPN (public)](https://site.api.espn.com/) | Live football scores, schedules, team logos |
+
+*(Note: Hadiths are stored locally within the extension to reduce unnecessary network requests).*
 
 ---
 
 ## Architecture
 
-```
+```text
 newtab-extension/
 ├── manifest.json     MV3 — Chrome, Firefox & Edge compatible
 ├── newtab.html       Full UI + CSS (single file)
-├── settings.js       Constants, defaults, storage & IndexedDB helpers
-├── newtab.js         All application logic + canvas engine
-├── fonts/            Drop Anurati font files here
+├── settings.js       Constants & default configurations
+├── js/               Modular ES6 Application Logic
+│   ├── main.js       Initialization & module orchestration (Entry point)
+│   ├── state.js      Centralized state & memory manager
+│   ├── utils.js      DOM helpers, storage shims & IndexedDB wrapper
+│   ├── backgrounds.js Interactive canvas engine
+│   ├── clock.js      Time, date, and animated favicon
+│   ├── weather.js    Open-Meteo integration & geolocation
+│   ├── prayer.js     Aladhan API & countdown logic
+│   ├── quran.js      AlQuran Cloud API, audio & local Hadith list
+│   ├── sports.js     ESPN live scoring engine
+│   ├── calendar.js   Google/Outlook calendar iframe logic
+│   ├── links.js      Quick links scaling and rendering
+│   ├── settings-ui.js UI builders for the settings panel
+│   └── onboarding.js First-launch welcome tutorial
+├── fonts/            Anurati font files here
 └── icons/            16 · 32 · 48 · 128 px
 ```
-
-Zero external JS dependencies — no bundler, no npm, no frameworks.
-
-**Cross-browser:** A shim at the top of `newtab.js` maps `chrome.storage.*` → `browser.storage.*` in Firefox. All other APIs (Canvas, IndexedDB, Fetch, Geolocation, ResizeObserver) are standard Web APIs supported in all three browsers.
-
-**Video storage:** Raw `File` objects in IndexedDB — no base64 encoding. A 50 MB video loads in under a second via `URL.createObjectURL()`.
-
-**Canvas cold-start:** The `applyGradient` override is initialized before the BG restore call. A `startInteractiveCanvas()` wrapper retries via `requestAnimationFrame` if `window.innerWidth` is 0 at startup.
-
 ---
-
 ## Changelog
+
+### v2.4
+- Massive architecture refactor: Split monolithic `newtab.js` into 13 modular ES6 files for better performance and maintainability
+- Centralized app state (`state.js`) to prevent widget data conflicts and race conditions
+- HTML updated to use `<script type="module">` for strict, deferred script execution
+- Fixed: Tafsir API 404 error by switching to AlQuran Cloud for simultaneous Arabic verse, translation, and Tafsir fetching
+- Fixed: Removed `data_collection_permissions` from manifest to pass Mozilla Firefox validation
+- Fixed: Settings UI freezing/crashing by isolating UI swatches into a dedicated module
+- Fixed: Resolved midnight Prayer bug by extracting day-tick logic to avoid main thread crashes
+- Removed `cdn.jsdelivr.net` from CSP as the broken repository is no longer used
 
 ### v2.3.1
 - Quran Surah playback — stream entire surah start-to-finish with next-ayah preloading
