@@ -215,6 +215,3 @@ newtab-extension/
 ## License
 
 MIT — do whatever you want, attribution appreciated.
-
-
-MIT — do whatever you want, attribution appreciated.
